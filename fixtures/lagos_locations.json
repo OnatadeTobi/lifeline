@@ -1,0 +1,26 @@
+[
+  {
+    "model": "locations.state",
+    "pk": 1,
+    "fields": {
+      "name": "Lagos",
+      "code": "LAG"
+    }
+  },
+  {
+    "model": "locations.localgovernment",
+    "pk": 1,
+    "fields": {
+      "state": 1,
+      "name": "Alimosho"
+    }
+  },
+  {
+    "model": "locations.localgovernment",
+    "pk": 2,
+    "fields": {
+      "state": 1,
+      "name": "Ajeromi-Ifelodun"
+    }
+  }
+]
