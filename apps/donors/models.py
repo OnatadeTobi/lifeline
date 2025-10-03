@@ -20,7 +20,7 @@ class Donor(models.Model):
     blood_type = models.CharField(max_length=3, choices=BloodType.choices)
     is_available = models.BooleanField(default=True)
     last_donation_date = models.DateTimeField(null=True, blank=True)
-    available_from = models.DateTimeField(null=True, blank=True)    # Auto-calculated
+    available_from = models.DateField(null=True, blank=True)    # Auto-calculated
     service_locations = models.ManyToManyField(
         LocalGovernment,
         related_name='donors',

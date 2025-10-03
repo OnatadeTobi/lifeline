@@ -33,7 +33,7 @@ class BloodRequestCreateView(generics.CreateAPIView):
         message = f"""
         Hello,
         
-        A {request.urgency.lower()} blood request has been posted that matches your profile:
+        A blood request has been posted that matches your profile:
         
         Blood Type: {request.blood_type}
         Hospital: {request.hospital.name}

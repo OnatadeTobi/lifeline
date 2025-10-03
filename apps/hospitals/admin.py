@@ -1,5 +1,26 @@
+# apps/hospitals/admin.py
 from django.contrib import admin
 from .models import Hospital
 
-# Register your models here.
-admin.site.register(Hospital)
+
+@admin.register(Hospital)
+class HospitalAdmin(admin.ModelAdmin):
+    list_display = ['name', 'email', 'primary_location', 'is_verified', 'created_at']
+    list_filter = ['is_verified', 'primary_location']
+    search_fields = ['name', 'user__email']
+    filter_horizontal = ['service_locations']
+    
+    actions = ['verify_hospitals', 'unverify_hospitals']
+    
+    def email(self, obj):
+        return obj.user.email
+    
+    def verify_hospitals(self, request, queryset):
+        queryset.update(is_verified=True)
+        self.message_user(request, f"{queryset.count()} hospitals verified")
+    verify_hospitals.short_description = "Verify selected hospitals"
+    
+    def unverify_hospitals(self, request, queryset):
+        queryset.update(is_verified=False)
+        self.message_user(request, f"{queryset.count()} hospitals unverified")
+    unverify_hospitals.short_description = "Unverify selected hospitals"

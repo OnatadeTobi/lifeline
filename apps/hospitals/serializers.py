@@ -32,7 +32,7 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
             email=email,
             username=email,
             password=password,
-            role=User.UserRole.HOSPITAL
+            role=User.UserRoles.HOSPITAL
         )
         
         hospital = Hospital.objects.create(user=user, **validated_data)

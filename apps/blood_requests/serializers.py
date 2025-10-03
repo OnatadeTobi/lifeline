@@ -5,7 +5,7 @@ from .models import BloodRequest, DonorResponse
 class BloodRequestCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = BloodRequest
-        fields = ['blood_type', 'urgency', 'contact_phone', 'notes']
+        fields = ['blood_type', 'contact_phone', 'notes']
     
     def create(self, validated_data):
         # Hospital is set from request.user
@@ -25,7 +25,7 @@ class BloodRequestSerializer(serializers.ModelSerializer):
         model = BloodRequest
         fields = [
             'id', 'hospital_name', 'hospital_location', 'blood_type',
-            'urgency', 'contact_phone', 'notes', 'status',
+            'contact_phone', 'notes', 'status',
             'matched_donors_count', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'status', 'created_at', 'updated_at']

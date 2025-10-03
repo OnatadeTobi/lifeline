@@ -28,7 +28,7 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
             email=email,
             username=email,
             password=password,
-            role=User.UserRole.DONOR
+            role=User.UserRoles.DONOR
         )
         
         # Create donor profile
