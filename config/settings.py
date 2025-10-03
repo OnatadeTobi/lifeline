@@ -74,6 +74,10 @@ MIDDLEWARE = [
 # CORS Settings (permissive for dev, lock down in prod)
 CORS_ALLOW_ALL_ORIGINS = True  # Change in production
 
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'apps.core.exceptions.custom_exception_handler',
+}
+
 
 # REST Framework Config
 REST_FRAMEWORK = {

@@ -11,6 +11,7 @@ User = get_user_model()
 class HospitalRegistrationSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(write_only=True)
     password = serializers.CharField(write_only=True, min_length=8)
+    password2 = serializers.CharField(max_length=68, write_only=True, min_length=8)
     service_locations = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=LocalGovernment.objects.all()
@@ -19,9 +20,17 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hospital
         fields = [
-            'email', 'password', 'name', 'phone', 'address',
+            'email', 'password', 'password2', 'name', 'phone', 'address',
             'primary_location', 'service_locations'
         ]
+
+    def validate(self, attrs):
+        password = attrs.get('password', '')
+        password2 = attrs.get('password2', '')
+        if password != password2:
+            raise serializers.ValidationError("passwords do not match")
+         
+        return attrs
     
     def create(self, validated_data):
         email = validated_data.pop('email')

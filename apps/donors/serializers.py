@@ -3,12 +3,14 @@ from django.contrib.auth import get_user_model
 from .models import Donor
 from apps.locations.models import LocalGovernment
 from apps.locations.serializers import LocalGovernmentSerializer
+#from rest_framework.exceptions import ValidationError
 
 User = get_user_model()
 
 class DonorRegistrationSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(write_only=True)
-    password = serializers.CharField(write_only=True, min_length=8)
+    password = serializers.CharField(max_length=68, write_only=True, min_length=8)
+    password2 = serializers.CharField(max_length=68, write_only=True, min_length=8)
     service_locations = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=LocalGovernment.objects.all()
@@ -16,7 +18,15 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Donor
-        fields = ['email', 'password', 'phone', 'blood_type', 'service_locations']
+        fields = ['email', 'password', 'password2', 'phone', 'blood_type', 'service_locations']
+
+    def validate(self, attrs):
+        password = attrs.get('password', '')
+        password2 = attrs.get('password2', '')
+        if password != password2:
+            raise serializers.ValidationError("passwords do not match")
+         
+        return attrs
     
     def create(self, validated_data):
         email = validated_data.pop('email')

@@ -7,20 +7,24 @@
       "code": "LAG"
     }
   },
-  {
-    "model": "locations.localgovernment",
-    "pk": 1,
-    "fields": {
-      "state": 1,
-      "name": "Alimosho"
-    }
-  },
-  {
-    "model": "locations.localgovernment",
-    "pk": 2,
-    "fields": {
-      "state": 1,
-      "name": "Ajeromi-Ifelodun"
-    }
-  }
+  { "model": "locations.localgovernment", "pk": 1, "fields": { "state": 1, "name": "Alimosho" } },
+  { "model": "locations.localgovernment", "pk": 2, "fields": { "state": 1, "name": "Ajeromi-Ifelodun" } },
+  { "model": "locations.localgovernment", "pk": 3, "fields": { "state": 1, "name": "Kosofe" } },
+  { "model": "locations.localgovernment", "pk": 4, "fields": { "state": 1, "name": "Mushin" } },
+  { "model": "locations.localgovernment", "pk": 5, "fields": { "state": 1, "name": "Oshodi-Isolo" } },
+  { "model": "locations.localgovernment", "pk": 6, "fields": { "state": 1, "name": "Ojo" } },
+  { "model": "locations.localgovernment", "pk": 7, "fields": { "state": 1, "name": "Ikorodu" } },
+  { "model": "locations.localgovernment", "pk": 8, "fields": { "state": 1, "name": "Surulere" } },
+  { "model": "locations.localgovernment", "pk": 9, "fields": { "state": 1, "name": "Agege" } },
+  { "model": "locations.localgovernment", "pk": 10, "fields": { "state": 1, "name": "Ifako-Ijaiye" } },
+  { "model": "locations.localgovernment", "pk": 11, "fields": { "state": 1, "name": "Shomolu" } },
+  { "model": "locations.localgovernment", "pk": 12, "fields": { "state": 1, "name": "Amuwo-Odofin" } },
+  { "model": "locations.localgovernment", "pk": 13, "fields": { "state": 1, "name": "Lagos Mainland" } },
+  { "model": "locations.localgovernment", "pk": 14, "fields": { "state": 1, "name": "Ikeja" } },
+  { "model": "locations.localgovernment", "pk": 15, "fields": { "state": 1, "name": "Eti-Osa" } },
+  { "model": "locations.localgovernment", "pk": 16, "fields": { "state": 1, "name": "Badagry" } },
+  { "model": "locations.localgovernment", "pk": 17, "fields": { "state": 1, "name": "Apapa" } },
+  { "model": "locations.localgovernment", "pk": 18, "fields": { "state": 1, "name": "Lagos Island" } },
+  { "model": "locations.localgovernment", "pk": 19, "fields": { "state": 1, "name": "Epe" } },
+  { "model": "locations.localgovernment", "pk": 20, "fields": { "state": 1, "name": "Ibeju-Lekki" } }
 ]

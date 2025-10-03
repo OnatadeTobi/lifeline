@@ -20,5 +20,5 @@ class LocalGovernment(models.Model):
         ordering = ['name']
         unique_together = ['state', 'name']
 
-    def _str__(self):
+    def __str__(self):
         return f"{self.name}, {self.state.code}"
