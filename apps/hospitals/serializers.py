@@ -10,19 +10,26 @@ User = get_user_model()
 
 class HospitalRegistrationSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(write_only=True)
-    password = serializers.CharField(write_only=True, min_length=8)
+    password = serializers.CharField(max_length=68, write_only=True, min_length=8)
     password2 = serializers.CharField(max_length=68, write_only=True, min_length=8)
     service_locations = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=LocalGovernment.objects.all()
     )
+
+    # read-only fields from User
+    user_email = serializers.SerializerMethodField(read_only=True)
     
     class Meta:
         model = Hospital
         fields = [
             'email', 'password', 'password2', 'name', 'phone', 'address',
-            'primary_location', 'service_locations'
+            'primary_location', 'service_locations', 'user_email'
         ]
+
+
+    def get_user_email(self, obj):
+        return obj.user.email
 
     def validate(self, attrs):
         password = attrs.get('password', '')
@@ -35,6 +42,7 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         email = validated_data.pop('email')
         password = validated_data.pop('password')
+        validated_data.pop('password2', None)
         service_locations = validated_data.pop('service_locations')
         
         user = User.objects.create_user(

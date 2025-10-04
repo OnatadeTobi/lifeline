@@ -3,7 +3,6 @@ from django.contrib.auth import get_user_model
 from .models import Donor
 from apps.locations.models import LocalGovernment
 from apps.locations.serializers import LocalGovernmentSerializer
-#from rest_framework.exceptions import ValidationError
 
 User = get_user_model()
 

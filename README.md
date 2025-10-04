@@ -67,6 +67,3 @@ Visit http://localhost:8000/api/docs/
 - O- : Universal donor (can donate to all)
 - AB+ : Universal receiver (can receive from all)
 - Full compatibility matrix implemented
-
-## Deployment
-See `docs/DEPLOYMENT.md` for production deployment guide.
