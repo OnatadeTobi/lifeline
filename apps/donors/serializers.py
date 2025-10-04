@@ -9,16 +9,34 @@ User = get_user_model()
 
 class DonorRegistrationSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(write_only=True)
+    first_name = serializers.CharField(max_length=100, write_only=True)
+    last_name = serializers.CharField(max_length=100, write_only=True)
     password = serializers.CharField(max_length=68, write_only=True, min_length=8)
     password2 = serializers.CharField(max_length=68, write_only=True, min_length=8)
     service_locations = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=LocalGovernment.objects.all()
     )
+
+    # read-only fields from User
+    user_first_name = serializers.SerializerMethodField(read_only=True)
+    user_last_name = serializers.SerializerMethodField(read_only=True)
+    user_email = serializers.SerializerMethodField(read_only=True)
     
     class Meta:
         model = Donor
-        fields = ['email', 'password', 'password2', 'phone', 'blood_type', 'service_locations']
+        fields = ['email', 'first_name', 'last_name', 'password',
+                  'password2', 'phone', 'blood_type', 'service_locations',
+                  'user_first_name', 'user_last_name', 'user_email']
+
+    def get_user_first_name(self, obj):
+        return obj.user.first_name
+
+    def get_user_last_name(self, obj):
+        return obj.user.last_name
+
+    def get_user_email(self, obj):
+        return obj.user.email
 
     def validate(self, attrs):
         password = attrs.get('password', '')
@@ -30,13 +48,18 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         email = validated_data.pop('email')
+        first_name=validated_data.pop('first_name')
+        last_name=validated_data.pop('last_name')
         password = validated_data.pop('password')
+        validated_data.pop('password2', None)
         service_locations = validated_data.pop('service_locations')
         
         # Create user
         user = User.objects.create_user(
             email=email,
             username=email,
+            first_name=first_name,
+            last_name=last_name,
             password=password,
             role=User.UserRoles.DONOR
         )

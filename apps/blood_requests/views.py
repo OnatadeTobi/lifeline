@@ -28,10 +28,11 @@ class BloodRequestCreateView(generics.CreateAPIView):
         return blood_request
     
     def send_donor_notification(self, donor, request):
+        user = self.request.user
         """Send email notification to donor"""
         subject = f"Urgent: {request.blood_type} Blood Needed"
         message = f"""
-        Hello,
+        Hello {user.first_name},
         
         A blood request has been posted that matches your profile:
         
