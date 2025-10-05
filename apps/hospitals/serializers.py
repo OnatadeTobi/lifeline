@@ -5,6 +5,14 @@ from .models import Hospital
 from apps.locations.models import LocalGovernment
 from apps.locations.serializers import LocalGovernmentSerializer
 
+# Email Verification
+from apps.accounts.models import EmailVerification
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
+import random
+
 
 User = get_user_model()
 
@@ -50,6 +58,7 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         validated_data.pop('password2', None)
         service_locations = validated_data.pop('service_locations')
+
         # Create user (handle possible race on unique email)
         try:
             user = User.objects.create_user(
@@ -64,7 +73,20 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
         hospital = Hospital.objects.create(user=user, **validated_data)
         hospital.service_locations.set(service_locations)
 
+        # Create email verification code and send
+        try:
+            code = f"{random.randint(0, 999999):06d}"
+            expires_at = timezone.now() + timedelta(hours=24)
+            EmailVerification.objects.create(user=user, code=code, expires_at=expires_at)
+
+            subject = "Your Lifeline verification code"
+            message = f"Your verification code is: {code}\nThis code expires in 24 hours."
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
+        except Exception:
+            pass
+
         return hospital
+    
 
 class HospitalSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email', read_only=True)

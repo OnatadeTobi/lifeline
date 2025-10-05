@@ -1,9 +1,17 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 from .models import Donor
 from apps.locations.models import LocalGovernment
 from apps.locations.serializers import LocalGovernmentSerializer
+from apps.accounts.models import EmailVerification
+import random
+
+
 
 User = get_user_model()
 
@@ -80,6 +88,19 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
         donor = Donor.objects.create(user=user, **validated_data)
         donor.service_locations.set(service_locations)
         
+        # Create email verification code (6-digit) and send email
+        try:
+            code = f"{random.randint(0, 999999):06d}"
+            expires_at = timezone.now() + timedelta(hours=24)
+            EmailVerification.objects.create(user=user, code=code, expires_at=expires_at)
+
+            subject = "Your Lifeline verification code"
+            message = f"Your verification code is: {code}\nThis code expires in 24 hours."
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
+        except Exception:
+            # Don't fail registration if email sending/verification model has issue
+            pass
+
         return donor
 
 class DonorSerializer(serializers.ModelSerializer):
