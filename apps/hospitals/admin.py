@@ -1,10 +1,10 @@
-# apps/hospitals/admin.py
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from .models import Hospital
 
 
 @admin.register(Hospital)
-class HospitalAdmin(admin.ModelAdmin):
+class HospitalAdmin(ModelAdmin):
     list_display = ['name', 'email', 'primary_location', 'is_verified', 'created_at']
     list_filter = ['is_verified', 'primary_location']
     search_fields = ['name', 'user__email']
@@ -15,12 +15,12 @@ class HospitalAdmin(admin.ModelAdmin):
     def email(self, obj):
         return obj.user.email
     
+    @admin.action(description="Verify selected hospitals")
     def verify_hospitals(self, request, queryset):
         queryset.update(is_verified=True)
         self.message_user(request, f"{queryset.count()} hospitals verified")
-    verify_hospitals.short_description = "Verify selected hospitals"
     
+    @admin.action(description="Unverify selected hospitals")
     def unverify_hospitals(self, request, queryset):
         queryset.update(is_verified=False)
         self.message_user(request, f"{queryset.count()} hospitals unverified")
-    unverify_hospitals.short_description = "Unverify selected hospitals"

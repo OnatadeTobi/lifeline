@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from .models import Hospital
 from apps.locations.models import LocalGovernment
 from apps.locations.serializers import LocalGovernmentSerializer
@@ -38,23 +39,31 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("passwords do not match")
          
         return attrs
+
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
     
     def create(self, validated_data):
         email = validated_data.pop('email')
         password = validated_data.pop('password')
         validated_data.pop('password2', None)
         service_locations = validated_data.pop('service_locations')
-        
-        user = User.objects.create_user(
-            email=email,
-            username=email,
-            password=password,
-            role=User.UserRoles.HOSPITAL
-        )
-        
+        # Create user (handle possible race on unique email)
+        try:
+            user = User.objects.create_user(
+                email=email,
+                username=email,
+                password=password,
+                role='HOSPITAL'
+            )
+        except IntegrityError:
+            raise serializers.ValidationError({'email': 'Email already registered'})
+
         hospital = Hospital.objects.create(user=user, **validated_data)
         hospital.service_locations.set(service_locations)
-        
+
         return hospital
 
 class HospitalSerializer(serializers.ModelSerializer):
