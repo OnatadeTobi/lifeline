@@ -5,7 +5,8 @@ from .views import (
     BloodRequestDetailView,
     DonorResponseListView,
     accept_request,
-    mark_fulfilled
+    mark_fulfilled,
+    confirm_donation,
 )
 
 urlpatterns = [
@@ -15,4 +16,6 @@ urlpatterns = [
     path('<int:request_id>/accept/', accept_request, name='accept_request'),
     path('<int:request_id>/fulfill/', mark_fulfilled, name='mark_fulfilled'),
     path('<int:request_id>/responses/', DonorResponseListView.as_view(), name='donor_responses'),
+
+    path('<int:request_id>/confirm/<int:response_id>/', confirm_donation, name='confirm_donation'),
 ]

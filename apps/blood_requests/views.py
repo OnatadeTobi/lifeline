@@ -98,6 +98,22 @@ class BloodRequestDetailView(generics.RetrieveAPIView):
 @permission_classes([IsAuthenticated])
 def accept_request(request, request_id):
     """Donor accepts a blood request"""
+
+    # --- Explicit Role & Profile Check ---
+
+    if not hasattr(request.user, 'role') or request.user.role != 'DONOR':
+        return Response(
+            {'detail': 'Forbidden: Only donors can accept requests'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    donor = getattr(request.user, 'donor', None)
+    if not donor:
+        return Response(
+            {'detail': 'Donor profile not found'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     try:
         blood_request = BloodRequest.objects.get(id=request_id)
         donor = request.user.donor
@@ -123,7 +139,7 @@ def accept_request(request, request_id):
         blood_request.save()
         
         # Set donor cooldown
-        DonorMatchingService.set_donor_cooldown(donor)
+        #DonorMatchingService.set_donor_cooldown(donor)
         
         # Notify hospital
         send_mail(
@@ -156,6 +172,21 @@ def accept_request(request, request_id):
 @permission_classes([IsAuthenticated])
 def mark_fulfilled(request, request_id):
     """Hospital marks request as fulfilled"""
+
+    # --- Explicit Role & Profile Check ---
+    if not hasattr(request.user, 'role') or request.user.role != 'HOSPITAL':
+        return Response(
+            {'detail': 'Forbidden: Only hospitals can mark requests as fulfilled'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    hospital = getattr(request.user, 'hospital', None)
+    if not hospital:
+        return Response(
+            {'detail': 'Hospital profile not found'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
     try:
         blood_request = BloodRequest.objects.get(
             id=request_id,
@@ -168,6 +199,45 @@ def mark_fulfilled(request, request_id):
         
     except BloodRequest.DoesNotExist:
         return Response({'error': 'Request not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def confirm_donation(request, request_id, response_id):
+    """Hospital confirms that a donor actually donated using the DonorResponse id."""
+    
+    # Ensure only hospitals can call this
+    if not hasattr(request.user, 'role') or request.user.role != 'HOSPITAL':
+        return Response({'detail': 'Forbidden: Only hospitals can confirm donations.'}, status=403)
+    
+    hospital = getattr(request.user, 'hospital', None)
+    if not hospital:
+        return Response({'detail': 'Hospital profile not found.'}, status=400)
+
+    try:
+        blood_request = BloodRequest.objects.get(id=request_id, hospital=hospital)
+    except BloodRequest.DoesNotExist:
+        return Response({'error': 'Request not found.'}, status=404)
+
+    try:
+        donor_response = DonorResponse.objects.get(request=blood_request, id=response_id)
+    except DonorResponse.DoesNotExist:
+        return Response({'error': 'Donor response not found.'}, status=404)
+
+    # Apply donor cooldown
+    DonorMatchingService.set_donor_cooldown(donor_response.donor)
+    
+    # Optionally mark response as processed (no 'fulfilled' field expected on model)
+    # If you need to track that, add a BooleanField to DonorResponse model (e.g. 'processed')
+    # donor_response.processed = True
+    # donor_response.save(update_fields=['processed'])
+    
+    # Optionally check if all donors have donated
+    # If you only needed one, mark request as fulfilled
+    blood_request.status = BloodRequest.RequestStatus.FULFILLED
+    blood_request.save(update_fields=['status'])
+
+    return Response({'message': 'Donation confirmed and donor cooldown applied.'})
 
 
 

@@ -13,8 +13,8 @@ class BloodRequestAdmin(ModelAdmin):
 
 @admin.register(DonorResponse)
 class DonorResponseAdmin(ModelAdmin): 
-    list_display = ['request', 'donor', 'accepted_at']
-    list_filter = ['accepted_at']
+    list_display = ['request', 'donor', 'accepted_at', 'fulfilled']
+    list_filter = ['accepted_at', 'fulfilled']
     search_fields = ['donor__user__email', 'request__hospital__name']
 
 

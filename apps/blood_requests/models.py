@@ -38,6 +38,8 @@ class DonorResponse(models.Model):
     request = models.ForeignKey(BloodRequest, on_delete=models.CASCADE, related_name='responses')
     donor = models.ForeignKey("donors.Donor", on_delete=models.CASCADE, related_name='responses')
     accepted_at = models.DateTimeField(auto_now_add=True)
+    fulfilled = models.BooleanField(default=False)
+
 
     class Meta:
         unique_together = ['request', 'donor']
