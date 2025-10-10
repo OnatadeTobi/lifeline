@@ -26,7 +26,23 @@ class User(AbstractUser):
 
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=20, choices=UserRoles.choices)
-    is_verified = models.BooleanField(default= False)
+    is_verified = models.BooleanField(default=False)
+    hospital = models.ForeignKey(
+        'hospitals.Hospital', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='staff_users',
+        help_text='Hospital associated with this user (for hospital staff)'
+    )
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']  
+    REQUIRED_FIELDS = ['username']
+    
+    class Meta:
+        permissions = [
+            ("can_manage_hospital", "Can manage hospital data"),
+            ("can_view_all_hospitals", "Can view all hospitals"),
+            ("can_manage_donors", "Can manage donor data"),
+            ("can_view_all_requests", "Can view all blood requests"),
+        ]  
