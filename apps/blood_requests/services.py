@@ -42,6 +42,6 @@ class DonorMatchingService:
         """Set 56-day cooldown after donation acceptance"""
         from django.utils import timezone
         donor.is_available = False
-        donor.last_donation_date = timezone.now().date()
-        donor.available_from = donor.last_donation_date + timedelta(days=56)
+        donor.last_donation_date = timezone.now() # Changed: removed .date()
+        donor.available_from = (timezone.now() + timedelta(days=56)).date() #donor.available_from = donor.last_donation_date + timedelta(days=56)
         donor.save()

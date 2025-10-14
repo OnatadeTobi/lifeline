@@ -1,1 +1,26 @@
+# Shell scripts use LF
 *.sh text eol=lf
+
+# Python files use LF
+*.py text eol=lf
+
+# All text files use LF (recommended for cross-platform)
+* text=auto eol=lf
+
+# Explicitly declare files that should always have LF
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary

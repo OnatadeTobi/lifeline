@@ -178,134 +178,100 @@ class SuperuserDonorAdmin(DonorAdminMixin, SuperuserAdmin):
         self.message_user(request, f"{count} donors' last donation date updated.")
 
 
-class HospitalDonorAdmin(DonorAdminMixin, HospitalRestrictedAdmin):
-    """Restricted Donor admin for hospital users"""
+# class HospitalDonorAdmin(DonorAdminMixin, HospitalRestrictedAdmin):
+#     """Restricted Donor admin for hospital users"""
     
-    filter_horizontal = ['service_locations']
+#     filter_horizontal = ['service_locations']
     
-    def get_queryset(self, request):
-        """Hospital users see only their donors"""
-        qs = super().get_queryset(request)
+#     def get_queryset(self, request):
+#         """Hospital users see only their donors"""
+#         qs = super().get_queryset(request)
         
-        if request.user.is_superuser:
-            return qs
+#         if request.user.is_superuser:
+#             return qs
         
-        # Hospital users can see only their donors
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            return qs.filter(hospital=request.user.hospital)
+#         # Hospital users can see only their donors
+#         if hasattr(request.user, 'hospital_profile') and request.user.hospital_profile:
+#             return qs.filter(hospital=request.user.hospital_profile)
 
-    # def get_queryset(self, request):
+#     # def get_queryset(self, request):
 
-    #     qs = super().get_queryset(request)
-    #     if request.user.is_superuser:
-    #         return qs
+#     #     qs = super().get_queryset(request)
+#     #     if request.user.is_superuser:
+#     #         return qs
         
-    #     if hasattr(request.user, 'hospital') and request.user.hospital:
-    #         # Only donors serving hospital’s areas
-    #         return qs.filter(hospital=request.user.hospital)
-    #     return qs.none()
+#     #     if hasattr(request.user, 'hospital_profile') and request.user.hospital_profile:
+#     #         # Only donors serving hospital’s areas
+#     #         return qs.filter(hospital=request.user.hospital_profile)
+#     #     return qs.none()
 
     
-    def has_add_permission(self, request):
-        """Hospital users can add donors"""
-        return hasattr(request.user, 'hospital') and request.user.hospital
+#     def has_add_permission(self, request):
+#         """Hospital users can add donors"""
+#         return hasattr(request.user, 'hospital_profile') and request.user.hospital_profile
     
-    def has_change_permission(self, request, obj=None):
-        """Hospital users can edit donors"""
-        if request.user.is_superuser:
-            return True
+#     def has_change_permission(self, request, obj=None):
+#         """Hospital users can edit donors"""
+#         if request.user.is_superuser:
+#             return True
         
-        if not obj:
-            return True
+#         if not obj:
+#             return True
         
-        # Hospital users can edit any donor
-        return True
+#         # Hospital users can edit any donor
+#         return True
     
-    def has_delete_permission(self, request, obj=None):
-        """Hospital users cannot delete donors"""
-        return False
+#     def has_delete_permission(self, request, obj=None):
+#         """Hospital users cannot delete donors"""
+#         return False
     
-    def get_actions(self, request):
-        """Limited actions for hospital users"""
-        actions = super().get_actions(request)
+#     def get_actions(self, request):
+#         """Limited actions for hospital users"""
+#         actions = super().get_actions(request)
         
-        actions['mark_as_available'] = (
-            self.mark_as_available,
-            'mark_as_available',
-            'Mark selected donors as available'
-        )
+#         actions['mark_as_available'] = (
+#             self.mark_as_available,
+#             'mark_as_available',
+#             'Mark selected donors as available'
+#         )
         
-        return actions
+#         return actions
     
-    @admin.action(description="Mark selected donors as available")
-    def mark_as_available(self, request, queryset):
-        """Mark donors as available"""
-        count = queryset.update(is_available=True)
-        self.message_user(request, f"{count} donors marked as available.")
+#     @admin.action(description="Mark selected donors as available")
+#     def mark_as_available(self, request, queryset):
+#         """Mark donors as available"""
+#         count = queryset.update(is_available=True)
+#         self.message_user(request, f"{count} donors marked as available.")
 
 
 class DynamicDonorAdmin(SuperuserDonorAdmin):
     """Dynamic Donor admin that adapts based on user type"""
     
     def has_module_permission(self, request):
-        """Control module access based on user type"""
-        if request.user.is_superuser:
-            return True
-        
-        # Check if user is a hospital staff member
-        user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
-            user_hospital = request.user.hospital_profile
-        
-        return user_hospital is not None
+        """Only superusers can access donors module"""
+        return request.user.is_superuser
     
     def get_queryset(self, request):
-        """Hospital users see all donors"""
+        """Only superusers can see donors"""
         if request.user.is_superuser:
             return super().get_queryset(request)
-        
-        # Check if user is a hospital staff member
-        user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
-            user_hospital = request.user.hospital_profile
-        
-        if user_hospital:
-            # Hospital users can see all donors
-            return super().get_queryset(request).filter(user__is_active=True)
-        
         return super().get_queryset(request).none()
     
     def has_add_permission(self, request):
-        """Hospital users can add donors"""
-        if request.user.is_superuser:
-            return True
-        
-        # Check if user is a hospital staff member
-        user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
-            user_hospital = request.user.hospital_profile
-        
-        return user_hospital is not None
+        """Only superusers can add donors"""
+        return request.user.is_superuser
     
     def has_change_permission(self, request, obj=None):
-        """Hospital users can edit donors"""
-        if request.user.is_superuser:
-            return True
+        """Only superusers can edit donors"""
+        return request.user.is_superuser
         
         if not obj:
             return True
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         return user_hospital is not None

@@ -9,32 +9,12 @@ class DynamicStateAdmin(SuperuserAdmin):
     """Admin for State model with dynamic permissions"""
     
     def has_module_permission(self, request):
-        """Hospital users can view locations"""
-        if request.user.is_superuser:
-            return True
-        
-        # Check if user is a hospital staff member
-        user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
-            user_hospital = request.user.hospital_profile
-        
-        return user_hospital is not None
+        """Only superusers can view locations"""
+        return request.user.is_superuser
     
     def has_view_permission(self, request, obj=None):
-        """Hospital users can view states"""
-        if request.user.is_superuser:
-            return True
-        
-        # Check if user is a hospital staff member
-        user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
-            user_hospital = request.user.hospital_profile
-        
-        return user_hospital is not None
+        """Only superusers can view states"""
+        return request.user.is_superuser
     
     def has_add_permission(self, request):
         """Only superusers can add states"""
@@ -117,32 +97,12 @@ class DynamicLocalGovernmentAdmin(SuperuserAdmin):
     """Admin for LocalGovernment model with dynamic permissions"""
     
     def has_module_permission(self, request):
-        """Hospital users can view locations"""
-        if request.user.is_superuser:
-            return True
-        
-        # Check if user is a hospital staff member
-        user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
-            user_hospital = request.user.hospital_profile
-        
-        return user_hospital is not None
+        """Only superusers can view locations"""
+        return request.user.is_superuser
     
     def has_view_permission(self, request, obj=None):
-        """Hospital users can view local governments"""
-        if request.user.is_superuser:
-            return True
-        
-        # Check if user is a hospital staff member
-        user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
-            user_hospital = request.user.hospital_profile
-        
-        return user_hospital is not None
+        """Only superusers can view local governments"""
+        return request.user.is_superuser
     
     def has_add_permission(self, request):
         """Only superusers can add local governments"""

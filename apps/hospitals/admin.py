@@ -153,7 +153,7 @@ class HospitalHospitalAdmin(HospitalAdminMixin, HospitalRestrictedAdmin):
         if request.user.is_superuser:
             return qs
         
-        if hasattr(request.user, 'hospital') and request.user.hospital:
+        if hasattr(request.user, 'hospital_profile') and request.user.hospital_profile:
             return qs.filter(id=request.user.hospital.id)
         
         return qs.none()
@@ -174,7 +174,7 @@ class HospitalHospitalAdmin(HospitalAdminMixin, HospitalRestrictedAdmin):
         if not obj:
             return True
         
-        return obj == request.user.hospital
+        return obj == request.user.hospital_profile
 
 
 class DynamicHospitalAdmin(SuperuserHospitalAdmin):
@@ -187,9 +187,8 @@ class DynamicHospitalAdmin(SuperuserHospitalAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         return user_hospital is not None
@@ -201,9 +200,8 @@ class DynamicHospitalAdmin(SuperuserHospitalAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         if user_hospital:
@@ -229,9 +227,8 @@ class DynamicHospitalAdmin(SuperuserHospitalAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         return obj == user_hospital

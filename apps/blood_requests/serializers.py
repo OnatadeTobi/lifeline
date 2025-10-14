@@ -9,7 +9,11 @@ class BloodRequestCreateSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         # Hospital is set from request.user
-        hospital = self.context['request'].user.hospital
+        hospital = self.context['request'].user.hospital_profile
+
+        if not hospital:
+            raise serializers.ValidationError("User does not have an associated hospital.")
+        
         blood_request = BloodRequest.objects.create(
             hospital=hospital,
             **validated_data

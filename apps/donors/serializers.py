@@ -96,6 +96,7 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
 
             subject = "Your Lifeline verification code"
             message = f"Your verification code is: {code}\nThis code expires in 24 hours."
+            print(code)
             send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
         except Exception:
             # Don't fail registration if email sending/verification model has issue

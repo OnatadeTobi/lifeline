@@ -35,11 +35,6 @@ class Command(BaseCommand):
             ('hospitals', 'hospital', 'view_hospital'),
             ('hospitals', 'hospital', 'change_hospital'),
             
-            # Donor permissions (all donors)
-            ('donors', 'donor', 'view_donor'),
-            ('donors', 'donor', 'add_donor'),
-            ('donors', 'donor', 'change_donor'),
-            
             # Blood request permissions (own hospital only)
             ('blood_requests', 'bloodrequest', 'view_bloodrequest'),
             ('blood_requests', 'bloodrequest', 'add_bloodrequest'),
@@ -49,9 +44,7 @@ class Command(BaseCommand):
             ('blood_requests', 'donorresponse', 'view_donorresponse'),
             ('blood_requests', 'donorresponse', 'change_donorresponse'),
             
-            # Location permissions (view only)
-            ('locations', 'state', 'view_state'),
-            ('locations', 'localgovernment', 'view_localgovernment'),
+            # No location permissions - restricted to superadmin only
         ]
         
         # Add permissions to hospital admin group

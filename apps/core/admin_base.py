@@ -109,9 +109,8 @@ def get_user_hospital(request):
         return None
     
     # Check both possible relationships
-    if hasattr(request.user, 'hospital') and request.user.hospital:
-        return request.user.hospital
-    elif hasattr(request.user, 'hospital_profile'):
+    
+    if hasattr(request.user, 'hospital_profile'):
         return request.user.hospital_profile
     
     return None
@@ -132,14 +131,14 @@ class HospitalRestrictedAdmin(BaseAdminMixin, ExportCSVMixin, UnfoldModelAdmin):
             return qs.none()
         
         # Filter based on hospital relationship
-        if hasattr(self.model, 'hospital'):
-            return qs.filter(hospital=user_hospital)
+        if hasattr(self.model, 'hospital_profile'):
+            return qs.filter(hospita_profilel=user_hospital)
         elif hasattr(self.model, 'user') and user_hospital:
             # For models like Donor that have user relationship
             return qs.filter(user__hospital=user_hospital)
         elif self.model.__name__ == 'User':
             # For User model, show hospital users
-            return qs.filter(hospital=user_hospital)
+            return qs.filter(hospital_profile=user_hospital)
         
         return qs.none()
     
@@ -149,7 +148,7 @@ class HospitalRestrictedAdmin(BaseAdminMixin, ExportCSVMixin, UnfoldModelAdmin):
             return True
         
         # Hospital users can see most models
-        if hasattr(request.user, 'hospital') and request.user.hospital:
+        if hasattr(request.user, 'hospital_profile') and request.user.hospital_profile:
             return True
         
         return False
@@ -160,24 +159,24 @@ class HospitalRestrictedAdmin(BaseAdminMixin, ExportCSVMixin, UnfoldModelAdmin):
             return True
         
         # Hospital users can add most records
-        return hasattr(request.user, 'hospital') and request.user.hospital
+        return hasattr(request.user, 'hospital_profile') and request.user.hospital_profile
     
     def has_change_permission(self, request, obj=None):
         """Control if user can edit specific records"""
         if request.user.is_superuser:
             return True
         
-        if not hasattr(request.user, 'hospital') or not request.user.hospital:
+        if not hasattr(request.user, 'hospital_profile') or not request.user.hospital_profile:
             return False
         
         if obj is None:
             return True
         
         # Check if this specific object belongs to user's hospital
-        if hasattr(obj, 'hospital'):
-            return obj.hospital == request.user.hospital
-        elif hasattr(obj, 'user') and hasattr(obj.user, 'hospital'):
-            return obj.user.hospital == request.user.hospital
+        if hasattr(obj, 'hospital_profile'):
+            return obj.hospital_profile == request.user.hospital_profile
+        elif hasattr(obj, 'user') and hasattr(obj.user, 'hospital_profile'):
+            return obj.user.hospital_profile == request.user.hospital_profile
         
         return False
     
@@ -186,35 +185,35 @@ class HospitalRestrictedAdmin(BaseAdminMixin, ExportCSVMixin, UnfoldModelAdmin):
         if request.user.is_superuser:
             return True
         
-        if not hasattr(request.user, 'hospital') or not request.user.hospital:
+        if not hasattr(request.user, 'hospital_profile') or not request.user.hospital_profile:
             return False
         
         if obj is None:
             return True
         
         # Check if this specific object belongs to user's hospital
-        if hasattr(obj, 'hospital'):
-            return obj.hospital == request.user.hospital
-        elif hasattr(obj, 'user') and hasattr(obj.user, 'hospital'):
-            return obj.user.hospital == request.user.hospital
+        if hasattr(obj, 'hospital_profile'):
+            return obj.hospital_profile == request.user.hospital_profile
+        elif hasattr(obj, 'user') and hasattr(obj.user, 'hospital_profile'):
+            return obj.user.hospital == request.user.hospital_profile
         
         return False
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         """Limit dropdown choices to user's hospital"""
-        if not request.user.is_superuser and hasattr(request.user, 'hospital'):
-            if db_field.name == "hospital":
+        if not request.user.is_superuser and hasattr(request.user, 'hospital_profile'):
+            if db_field.name == "hospital_profile":
                 kwargs["queryset"] = kwargs["queryset"].filter(id=request.user.hospital.id)
-            elif db_field.name == "user" and hasattr(request.user, 'hospital'):
+            elif db_field.name == "user" and hasattr(request.user, 'hospital_profile'):
                 # Limit user choices to hospital users
-                kwargs["queryset"] = kwargs["queryset"].filter(hospital=request.user.hospital)
+                kwargs["queryset"] = kwargs["queryset"].filter(hospital_profile=request.user.hospital_profile)
         
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         """Limit many-to-many choices"""
-        if not request.user.is_superuser and hasattr(request.user, 'hospital'):
-            if db_field.name in ["service_locations"] and hasattr(request.user, 'hospital'):
+        if not request.user.is_superuser and hasattr(request.user, 'hospital_profile'):
+            if db_field.name in ["service_locations"] and hasattr(request.user, 'hospital_profile'):
                 # Limit to hospital's service locations
                 hospital_locations = request.user.hospital.service_locations.all()
                 kwargs["queryset"] = kwargs["queryset"].filter(

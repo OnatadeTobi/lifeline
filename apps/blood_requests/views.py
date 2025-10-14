@@ -32,12 +32,13 @@ class BloodRequestCreateView(generics.CreateAPIView):
         """Send email notification to donor"""
         subject = f"Urgent: {request.blood_type} Blood Needed"
         message = f"""
-        Hello {user.first_name},
+        Hello {donor.user.first_name},
         
         A blood request has been posted that matches your profile:
         
         Blood Type: {request.blood_type}
         Hospital: {request.hospital.name}
+        Address: {request.hospital.address}
         Location: {request.hospital.primary_location.name}
         Contact: {request.contact_phone}
         
@@ -160,7 +161,6 @@ def accept_request(request, request_id):
         
         return Response({
             'message': 'Request accepted successfully',
-            'next_available_date': donor.available_from
         })
         
     except BloodRequest.DoesNotExist:
@@ -210,7 +210,7 @@ def confirm_donation(request, request_id, response_id):
     if not hasattr(request.user, 'role') or request.user.role != 'HOSPITAL':
         return Response({'detail': 'Forbidden: Only hospitals can confirm donations.'}, status=403)
     
-    hospital = getattr(request.user, 'hospital', None)
+    hospital = getattr(request.user, 'hospital_profile', None)
     if not hospital:
         return Response({'detail': 'Hospital profile not found.'}, status=400)
 

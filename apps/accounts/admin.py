@@ -81,12 +81,10 @@ class UserAdminMixin:
         if request.user.is_superuser:
             return qs
         
-        if hasattr(request.user, 'hospital') and request.user.hospital:
+        if hasattr(request.user, 'hospita_profile') and request.user.hospital_profile:
             # Hospital users only see users related to their hospital
-            return qs.filter(
-                Q(hospital=request.user.hospital) | 
-                Q(role='DONOR')  # Hospital users can see all donors
-            )
+            #return qs.filter(hospital_profile=request.user.hospital_profile)
+            return qs.filter(id=request.user.id)
         
         return qs.none()
 
@@ -148,10 +146,10 @@ class HospitalUserAdmin(UserAdminMixin, HospitalRestrictedAdmin):
         if request.user.is_superuser:
             return qs
         
-        if hasattr(request.user, 'hospital') and request.user.hospital:
+        if hasattr(request.user, 'hospital_profile') and request.user.hospital_profile:
             # Hospital users see their hospital users and all donors
             return qs.filter(
-                Q(hospital=request.user.hospital) | 
+                Q(hospital_profile=request.user.hospital_profile) | 
                 Q(role='DONOR')
             )
         
@@ -159,7 +157,7 @@ class HospitalUserAdmin(UserAdminMixin, HospitalRestrictedAdmin):
     
     def has_add_permission(self, request):
         """Hospital users can add donors"""
-        return hasattr(request.user, 'hospital') and request.user.hospital
+        return hasattr(request.user, 'hospital_profile') and request.user.hospital_profile
     
     def has_change_permission(self, request, obj=None):
         """Hospital users can edit their hospital users and donors"""
@@ -169,10 +167,10 @@ class HospitalUserAdmin(UserAdminMixin, HospitalRestrictedAdmin):
         if not obj:
             return True
         
-        if hasattr(request.user, 'hospital') and request.user.hospital:
+        if hasattr(request.user, 'hospital_profile') and request.user.hospital_profile:
             # Can edit hospital users or any donor
             return (
-                (hasattr(obj, 'hospital') and obj.hospital == request.user.hospital) or
+                (hasattr(obj, 'hospital_profile') and obj.hospital_profile == request.user.hospital_profile) or
                 obj.role == 'DONOR'
             )
         
@@ -192,31 +190,31 @@ class UserAdmin(BaseUserAdmin):
         super().__init__(*args, **kwargs)
 
 
-# Register EmailVerification
-@admin.register(EmailVerification)
-class EmailVerificationAdmin(SuperuserAdmin):
-    """Admin for email verification codes"""
+# # Register EmailVerification
+# @admin.register(EmailVerification)
+# class EmailVerificationAdmin(SuperuserAdmin):
+#     """Admin for email verification codes"""
     
-    list_display = ['user', 'code', 'created_at', 'expires_at', 'used', 'is_valid_display']
-    list_filter = ['used', 'created_at', 'expires_at']
-    search_fields = ['user__email', 'code']
-    readonly_fields = ['created_at', 'expires_at']
-    date_hierarchy = 'created_at'
+#     list_display = ['user', 'code', 'created_at', 'expires_at', 'used', 'is_valid_display']
+#     list_filter = ['used', 'created_at', 'expires_at']
+#     search_fields = ['user__email', 'code']
+#     readonly_fields = ['created_at', 'expires_at']
+#     date_hierarchy = 'created_at'
     
-    def is_valid_display(self, obj):
-        """Display if verification is valid"""
-        if obj.is_valid():
-            return format_html('<span style="color: green;">✓ Valid</span>')
-        else:
-            return format_html('<span style="color: red;">✗ Invalid</span>')
+#     def is_valid_display(self, obj):
+#         """Display if verification is valid"""
+#         if obj.is_valid():
+#             return format_html('<span style="color: green;">✓ Valid</span>')
+#         else:
+#             return format_html('<span style="color: red;">✗ Invalid</span>')
     
-    is_valid_display.short_description = 'Valid'
+#     is_valid_display.short_description = 'Valid'
     
-    def get_queryset(self, request):
-        """Superusers see all, others see none"""
-        if request.user.is_superuser:
-            return super().get_queryset(request)
-        return self.model.objects.none()
+#     def get_queryset(self, request):
+#         """Superusers see all, others see none"""
+#         if request.user.is_superuser:
+#             return super().get_queryset(request)
+#         return self.model.objects.none()
 
 
 class DynamicUserAdmin(SuperuserUserAdmin):
@@ -236,15 +234,14 @@ class DynamicUserAdmin(SuperuserUserAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         if user_hospital:
             # Hospital users see their hospital users and all donors
             return super().get_queryset(request).filter(
-                Q(hospital=user_hospital) | 
+                Q(hospital_profile=user_hospital) | 
                 Q(role='DONOR')
             )
         
@@ -258,9 +255,8 @@ class DynamicUserAdmin(SuperuserUserAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         if user_hospital:
@@ -268,7 +264,7 @@ class DynamicUserAdmin(SuperuserUserAdmin):
                 return True
             # Can view hospital users or any donor
             return (
-                (hasattr(obj, 'hospital') and obj.hospital == user_hospital) or
+                (hasattr(obj, 'hospital_profile') and obj.hospital_profile == user_hospital) or
                 obj.role == 'DONOR'
             )
         
@@ -281,9 +277,8 @@ class DynamicUserAdmin(SuperuserUserAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         if user_hospital:
@@ -291,7 +286,7 @@ class DynamicUserAdmin(SuperuserUserAdmin):
                 return True
             # Can edit hospital users or any donor
             return (
-                (hasattr(obj, 'hospital') and obj.hospital == user_hospital) or
+                (hasattr(obj, 'hospital_profile') and obj.hospital_profile == user_hospital) or
                 obj.role == 'DONOR'
             )
         

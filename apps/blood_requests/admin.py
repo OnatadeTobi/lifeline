@@ -5,6 +5,12 @@ from apps.core.admin_base import SuperuserAdmin, HospitalRestrictedAdmin
 from .models import BloodRequest, DonorResponse
 
 
+from django.core.mail import send_mail
+from django.conf import settings
+
+from .services import DonorMatchingService
+
+
 class DonorResponseInline(admin.TabularInline):
     """Inline admin for donor responses"""
     model = DonorResponse
@@ -180,8 +186,8 @@ class HospitalBloodRequestAdmin(BloodRequestAdminMixin, HospitalRestrictedAdmin)
         if request.user.is_superuser:
             return qs
         
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            return qs.filter(hospital=request.user.hospital)
+        if hasattr(request.user, 'hospital_profile') and request.user.hospital_profile:
+            return qs.filter(hospital=request.user.hospital_profile)
         
         return qs.none()
     
@@ -361,8 +367,8 @@ class HospitalDonorResponseAdmin(DonorResponseAdminMixin, HospitalRestrictedAdmi
         if request.user.is_superuser:
             return qs
         
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            return qs.filter(request__hospital=request.user.hospital)
+        if hasattr(request.user, 'hospital_profile') and request.user.hospital_profile:
+            return qs.filter(request__hospital=request.user.hospital_profile)
         
         return qs.none()
     
@@ -403,9 +409,8 @@ class DynamicBloodRequestAdmin(SuperuserBloodRequestAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         return user_hospital is not None
@@ -417,9 +422,8 @@ class DynamicBloodRequestAdmin(SuperuserBloodRequestAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         if user_hospital:
@@ -434,9 +438,8 @@ class DynamicBloodRequestAdmin(SuperuserBloodRequestAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         return user_hospital is not None
@@ -451,12 +454,56 @@ class DynamicBloodRequestAdmin(SuperuserBloodRequestAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         return obj.hospital == user_hospital
+    
+    
+    
+    def save_model(self, request, obj, form, change):
+        if not obj.hospital_id:
+            hospital = getattr(request.user, 'hospital_profile', None)
+            if not hospital:
+                raise ValueError("Hospital must be set before saving this blood request.")
+            obj.hospital = hospital
+        super().save_model(request, obj, form, change)
+
+        # --- Send notifications to matching donors ---
+        matching_donors = DonorMatchingService.find_compatible_donors(obj)
+        for donor in matching_donors:
+            self.send_donor_notification(donor, obj)
+
+
+    def send_donor_notification(self, donor, request_obj):
+        """Send email notification to donor"""
+        subject = f"Urgent: {request_obj.blood_type} Blood Needed"
+        message = f"""
+        Hello {donor.user.first_name},
+
+        A blood request has been posted that matches your profile:
+
+        Blood Type: {request_obj.blood_type}
+        Hospital: {request_obj.hospital.name}
+        Address: {request_obj.hospital.address}
+        Location: {request_obj.hospital.primary_location.name}
+        Contact: {request_obj.contact_phone}
+
+        If you can donate, please accept this request:
+        Accept Link: {settings.FRONTEND_URL}/requests/{request_obj.id}/accept/
+
+        Thank you for being a lifesaver!
+        """
+
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [donor.user.email],
+            fail_silently=True
+        )
+
     
     def has_delete_permission(self, request, obj=None):
         """Hospital users can delete their own requests"""
@@ -468,9 +515,8 @@ class DynamicBloodRequestAdmin(SuperuserBloodRequestAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         return obj.hospital == user_hospital
@@ -486,9 +532,8 @@ class DynamicDonorResponseAdmin(SuperuserDonorResponseAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         return user_hospital is not None
@@ -500,9 +545,8 @@ class DynamicDonorResponseAdmin(SuperuserDonorResponseAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         if user_hospital:
@@ -528,9 +572,8 @@ class DynamicDonorResponseAdmin(SuperuserDonorResponseAdmin):
         
         # Check if user is a hospital staff member
         user_hospital = None
-        if hasattr(request.user, 'hospital') and request.user.hospital:
-            user_hospital = request.user.hospital
-        elif hasattr(request.user, 'hospital_profile'):
+        
+        if hasattr(request.user, 'hospital_profile'):
             user_hospital = request.user.hospital_profile
         
         return obj.request.hospital == user_hospital

@@ -210,3 +210,15 @@ UNFOLD = {
 }
 
 # python manage.py setup_admin_permissions
+# python manage.py loaddata fixtures/lagos_locations.json
+
+# from apps.blood_requests.models import DonorResponse
+
+# # Find the response for request 6
+# responses = DonorResponse.objects.filter(request_id=6)
+# for r in responses:
+#     print(f"Response ID: {r.id}, Donor ID: {r.donor.id}, Donor Name: {r.donor.user.first_name}")
+
+#to return a response after a donor finishes donating blood to show when next they will be available
+
+# 'next_available_date': donor.available_from
