@@ -25,3 +25,10 @@ env/
 
 # Git
 .git
+
+# Logs
+logs/
+*.log
+
+# Pycharm
+.idea

@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from .models import BloodRequest, DonorResponse
 
+import logging
+logger = logging.getLogger('apps.blood_requests')
+
 
 class BloodRequestCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -8,17 +11,52 @@ class BloodRequestCreateSerializer(serializers.ModelSerializer):
         fields = ['blood_type', 'contact_phone', 'notes']
     
     def create(self, validated_data):
-        # Hospital is set from request.user
-        hospital = self.context['request'].user.hospital_profile
-
-        if not hospital:
-            raise serializers.ValidationError("User does not have an associated hospital.")
+        user = self.context['request'].user
         
-        blood_request = BloodRequest.objects.create(
-            hospital=hospital,
-            **validated_data
-        )
-        return blood_request
+        # Check if user is a hospital
+        if not hasattr(user, 'role') or user.role != 'HOSPITAL':
+            logger.warning(
+                f"Unauthorized blood request creation attempt - User: {user.email}, "
+                f"Role: {getattr(user, 'role', 'unknown')}"
+            )
+            raise serializers.ValidationError(
+                "Only hospital users can create blood requests."
+            )
+        
+        # Get hospital profile safely
+        hospital = getattr(user, 'hospital_profile', None)
+        
+        if not hospital:
+            logger.error(
+                f"Blood request creation failed - Hospital profile not found for user {user.email}"
+            )
+            raise serializers.ValidationError(
+                "User does not have an associated hospital."
+            )
+        
+        try:
+            blood_request = BloodRequest.objects.create(
+                hospital=hospital,
+                **validated_data
+            )
+
+            logger.info(
+                f"Blood request created - ID: {blood_request.id}, "
+                f"Hospital: {hospital.name}, Blood Type: {blood_request.blood_type}, "
+                f"Created by: {user.email}"
+            )
+            
+            return blood_request
+        
+        except Exception as e:
+            logger.exception(
+                f"Unexpected error creating blood request - Hospital: {hospital.name}, "
+                f"User: {user.email}, Error: {str(e)}"
+            )
+            raise serializers.ValidationError(
+                "An error occurred while creating the blood request."
+            )
+        
 
 class BloodRequestSerializer(serializers.ModelSerializer):
     hospital_name = serializers.CharField(source='hospital.name', read_only=True)

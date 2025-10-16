@@ -222,3 +222,107 @@ UNFOLD = {
 #to return a response after a donor finishes donating blood to show when next they will be available
 
 # 'next_available_date': donor.available_from
+
+
+# Add this to your settings.py (at the bottom)
+
+import os
+from pathlib import Path
+
+# Create logs directory if it doesn't exist
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    
+    # Define log formats
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
+        },
+    },
+    
+    # Define where logs go
+    'handlers': {
+        # Console output (what you see in terminal)
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+            'level': 'INFO',
+        },
+        
+        # General application logs
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'lifeline.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'level': 'INFO',
+        },
+        
+        # Error logs (separate file for quick error checking)
+        'error_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'errors.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'level': 'ERROR',
+        },
+        
+        # Critical issues (like database failures)
+        'critical_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'critical.log',
+            'maxBytes': 1024 * 1024 * 5,  # 5MB
+            'backupCount': 3,
+            'formatter': 'verbose',
+            'level': 'CRITICAL',
+        },
+    },
+    
+    # Define loggers for different parts of your app
+    'loggers': {
+        # Your app's logger
+        'apps': {
+            'handlers': ['console', 'file', 'error_file', 'critical_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        
+        # Django's internal logs
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        
+        # Database query logs (useful for debugging slow queries)
+        'django.db.backends': {
+            'handlers': ['file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        
+        # Security related logs
+        'django.security': {
+            'handlers': ['error_file', 'critical_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+    
+    # Root logger (catches everything else)
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+}

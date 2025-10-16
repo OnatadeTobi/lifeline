@@ -4,7 +4,8 @@ from .views import (
     BloodRequestListView,
     BloodRequestDetailView,
     DonorResponseListView,
-    accept_request,
+    AcceptRequestView,
+    #accept_request,
     mark_fulfilled,
     confirm_donation,
 )
@@ -13,7 +14,7 @@ urlpatterns = [
     path('create/', BloodRequestCreateView.as_view(), name='request_create'),
     path('', BloodRequestListView.as_view(), name='request_list'),
     path('<int:pk>/', BloodRequestDetailView.as_view(), name='request_detail'),
-    path('<int:request_id>/accept/', accept_request, name='accept_request'),
+    path('<int:request_id>/accept/', AcceptRequestView.as_view(), name='accept_request'),
     path('<int:request_id>/fulfill/', mark_fulfilled, name='mark_fulfilled'),
     path('<int:request_id>/responses/', DonorResponseListView.as_view(), name='donor_responses'),
 
