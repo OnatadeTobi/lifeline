@@ -13,6 +13,11 @@ from django.utils import timezone
 from datetime import timedelta
 import random
 
+from apps.core.utils import mask_email
+
+import logging
+logger = logging.getLogger('apps.hospitals')
+
 
 User = get_user_model()
 
@@ -43,13 +48,17 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         password = attrs.get('password', '')
         password2 = attrs.get('password2', '')
+        email = attrs.get('email')
+
         if password != password2:
+            logger.warning(f"Password mismatch during hospital registration attempt for email: {mask_email(email)}")
             raise serializers.ValidationError("passwords do not match")
          
         return attrs
 
     def validate_email(self, value):
         if User.objects.filter(email__iexact=value).exists():
+            logger.warning(f"Registration blocked - duplicate email detected: {mask_email(value)}")
             raise serializers.ValidationError("A user with this email already exists.")
         return value
     
@@ -67,11 +76,15 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
                 password=password,
                 role='HOSPITAL'
             )
+            logger.info("User account created successfully for hospital: %s", mask_email(email))
         except IntegrityError:
+            logger.error("IntegrityError during hospital registration for email: %s", mask_email(email), exc_info=True)
             raise serializers.ValidationError({'email': 'Email already registered'})
 
+        # Create Hospital profile
         hospital = Hospital.objects.create(user=user, **validated_data)
         hospital.service_locations.set(service_locations)
+        logger.info("Hospital profile created for user: %s (ID: %s)", mask_email(email), hospital.id)
 
         # Create email verification code and send
         try:
@@ -83,8 +96,9 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
             message = f"Your verification code is: {code}\nThis code expires in 24 hours."
             print(code)
             send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
-        except Exception:
-            pass
+            logger.info("Verification email sent successfully to hospital: %s", mask_email(email))
+        except Exception as e:
+            logger.error("Failed to send verification email to %s: %s", mask_email(email), str(e), exc_info=True)
 
         return hospital
     

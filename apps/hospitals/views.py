@@ -12,4 +12,4 @@ class HospitalProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = HospitalSerializer
     
     def get_object(self):
-        return self.request.user.hospital
+        return self.request.user.hospital_profile
