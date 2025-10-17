@@ -11,6 +11,10 @@ from apps.locations.serializers import LocalGovernmentSerializer
 from apps.accounts.models import EmailVerification
 import random
 
+from apps.core.utils import mask_email
+
+import logging
+logger = logging.getLogger('apps.donors')
 
 
 User = get_user_model()
@@ -49,7 +53,10 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         password = attrs.get('password', '')
         password2 = attrs.get('password2', '')
+        email = attrs.get('email')
+
         if password != password2:
+            logger.warning(f"Password mismatch during donor registration attempt for email: {mask_email(email)}")
             raise serializers.ValidationError("passwords do not match")
          
         return attrs
@@ -57,6 +64,7 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
     def validate_email(self, value):
         """Ensure email is unique."""
         if User.objects.filter(email__iexact=value).exists():
+            logger.warning(f"Registration blocked - duplicate email detected: {mask_email(value)}")
             raise serializers.ValidationError("A user with this email already exists.")
         return value
     
@@ -78,15 +86,17 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
                 password=password,
                 role='DONOR'
             )
+            logger.info("User account created successfully for donor: %s", mask_email(email))
         except IntegrityError:
             # Turn DB constraint into serializer validation error
-            raise serializers.ValidationError({
-                'email': 'Email already registered'
-            })
+            logger.error("IntegrityError during donor registration for email: %s", mask_email(email), exc_info=True)
+            raise serializers.ValidationError({'email': 'Email already registered'})
         
         # Create donor profile
         donor = Donor.objects.create(user=user, **validated_data)
         donor.service_locations.set(service_locations)
+        logger.info("Donor profile created for user: %s (ID: %s)", mask_email(email), donor.id)
+
         
         # Create email verification code (6-digit) and send email
         try:
@@ -98,9 +108,10 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
             message = f"Your verification code is: {code}\nThis code expires in 24 hours."
             print(code)
             send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
-        except Exception:
+            logger.info("Verification email sent successfully to donor: %s", mask_email(email))
+        except Exception as e:
             # Don't fail registration if email sending/verification model has issue
-            pass
+            logger.error("Failed to send verification email to %s: %s", mask_email(email), str(e), exc_info=True)
 
         return donor
 
