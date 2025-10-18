@@ -64,7 +64,7 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
     def validate_email(self, value):
         """Ensure email is unique."""
         if User.objects.filter(email__iexact=value).exists():
-            logger.warning(f"Registration blocked - duplicate email detected: {mask_email(value)}")
+            logger.warning(f"[DONOR] Registration blocked - duplicate email detected: {mask_email(value)}")
             raise serializers.ValidationError("A user with this email already exists.")
         return value
     
@@ -111,7 +111,7 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
             logger.info("Verification email sent successfully to donor: %s", mask_email(email))
         except Exception as e:
             # Don't fail registration if email sending/verification model has issue
-            logger.error("Failed to send verification email to %s: %s", mask_email(email), str(e), exc_info=True)
+            logger.error("[DONOR] Failed to send verification email to %s: %s", mask_email(email), str(e), exc_info=True)
 
         return donor
 
