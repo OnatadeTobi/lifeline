@@ -58,7 +58,7 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         if User.objects.filter(email__iexact=value).exists():
-            logger.warning(f"Registration blocked - duplicate email detected: {mask_email(value)}")
+            logger.warning(f"[HOSPITAL] Registration blocked - duplicate email detected: {mask_email(value)}")
             raise serializers.ValidationError("A user with this email already exists.")
         return value
     
@@ -98,7 +98,7 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
             send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
             logger.info("Verification email sent successfully to hospital: %s", mask_email(email))
         except Exception as e:
-            logger.error("Failed to send verification email to %s: %s", mask_email(email), str(e), exc_info=True)
+            logger.error("[HOSPITAL] Failed to send verification email to %s: %s", mask_email(email), str(e), exc_info=True)
 
         return hospital
     
