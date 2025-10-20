@@ -32,3 +32,6 @@ logs/
 
 # Pycharm
 .idea
+
+# Tests
+.coverage

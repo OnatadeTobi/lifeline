@@ -38,3 +38,20 @@ class User(AbstractUser):
             ("can_manage_donors", "Can manage donor data"),
             ("can_view_all_requests", "Can view all blood requests"),
         ]  
+
+    @property
+    def donor_profile(self):
+        """Compatibility alias used in tests: return the related Donor instance if present."""
+        try:
+            return getattr(self, 'donor')
+        except Exception:
+            # Reverse OneToOne descriptor raises RelatedObjectDoesNotExist if absent
+            return None
+
+    @property
+    def hospital_profile(self):
+        """Compatibility alias: return the related hospital_profile instance if present."""
+        try:
+            return getattr(self, 'hospital_profile')
+        except Exception:
+            return None
