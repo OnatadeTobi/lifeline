@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from apps.core import views_health
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,4 +32,8 @@ urlpatterns = [
     path('api/v1/hospitals/', include('apps.hospitals.urls')),
     path('api/v1/requests/', include('apps.blood_requests.urls')),
     path('api/v1/locations/', include('apps.locations.urls')),
+    
+    # Health and readiness probes
+    path('health/', views_health.health, name='health'),
+    path('ready/', views_health.ready, name='ready'),
 ]
