@@ -35,3 +35,9 @@ logs/
 
 # Tests
 .coverage
+
+tempp
+
+Dockerfile
+entrypoint.sh
+.dockerignore
