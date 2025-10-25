@@ -77,10 +77,6 @@ MIDDLEWARE = [
 # CORS Settings (permissive for dev, lock down in prod)
 CORS_ALLOW_ALL_ORIGINS = True  # Change in production
 
-# REST_FRAMEWORK = {
-#     'EXCEPTION_HANDLER': 'apps.core.exceptions.custom_exception_handler',
-# }
-
 
 # REST Framework Config
 REST_FRAMEWORK = {
@@ -234,11 +230,6 @@ RATELIMIT_VIEW = 'apps.core.views.ratelimit_error'
 
 # 'next_available_date': donor.available_from
 
-
-# Add this to your settings.py (at the bottom)
-
-import os
-from pathlib import Path
 
 # Create logs directory if it doesn't exist
 LOGS_DIR = BASE_DIR / 'logs'
