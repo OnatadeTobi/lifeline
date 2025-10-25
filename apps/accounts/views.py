@@ -82,7 +82,7 @@ def resend_verification(request):
     try:
         code = f"{random.randint(0, 999999):06d}"
         expires_at = timezone.now() + timedelta(hours=24)
-        print(code)
+    
 
         EmailVerification.objects.create(user=user, code=code, expires_at=expires_at)
         logger.info(f"New verification code generated for user ID {user.id}")
@@ -122,7 +122,6 @@ def password_reset_request(request):
     try:
         code = f"{random.randint(0, 999999):06d}"
         expires_at = timezone.now() + timedelta(hours=1)
-        print(code)
         EmailVerification.objects.create(user=user, code=code, expires_at=expires_at)
 
         logger.info(f"Password reset code generated for user ID {user.id}")

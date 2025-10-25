@@ -1,9 +1,8 @@
 from django.contrib import admin
-from django.utils.html import format_html
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.db.models import Q
 from apps.core.admin_base import SuperuserAdmin, HospitalRestrictedAdmin
-from .models import User, EmailVerification
+from .models import User
 
 
 class UserAdminMixin:
@@ -189,32 +188,6 @@ class UserAdmin(BaseUserAdmin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-
-# # Register EmailVerification
-# @admin.register(EmailVerification)
-# class EmailVerificationAdmin(SuperuserAdmin):
-#     """Admin for email verification codes"""
-    
-#     list_display = ['user', 'code', 'created_at', 'expires_at', 'used', 'is_valid_display']
-#     list_filter = ['used', 'created_at', 'expires_at']
-#     search_fields = ['user__email', 'code']
-#     readonly_fields = ['created_at', 'expires_at']
-#     date_hierarchy = 'created_at'
-    
-#     def is_valid_display(self, obj):
-#         """Display if verification is valid"""
-#         if obj.is_valid():
-#             return format_html('<span style="color: green;">✓ Valid</span>')
-#         else:
-#             return format_html('<span style="color: red;">✗ Invalid</span>')
-    
-#     is_valid_display.short_description = 'Valid'
-    
-#     def get_queryset(self, request):
-#         """Superusers see all, others see none"""
-#         if request.user.is_superuser:
-#             return super().get_queryset(request)
-#         return self.model.objects.none()
 
 
 class DynamicUserAdmin(SuperuserUserAdmin):

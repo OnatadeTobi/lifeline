@@ -4,7 +4,7 @@ Test suite for account management functionality.
 import pytest
 from django.urls import reverse
 from rest_framework import status
-from apps.accounts.models import User, EmailVerification
+from apps.accounts.models import EmailVerification
 from apps.core.tests.factories import UserFactory
 from django.utils import timezone
 from datetime import timedelta
