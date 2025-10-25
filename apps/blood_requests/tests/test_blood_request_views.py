@@ -5,10 +5,8 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 from apps.blood_requests.models import BloodRequest, DonorResponse
-from apps.core.tests.factories import (
-    BloodRequestFactory, DonorFactory, HospitalFactory, DonorResponseFactory
-)
-from django.utils import timezone
+from apps.core.tests.factories import DonorResponseFactory
+
 
 pytestmark = pytest.mark.django_db
 

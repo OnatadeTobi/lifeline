@@ -5,7 +5,6 @@ from .views import (
     BloodRequestDetailView,
     DonorResponseListView,
     AcceptRequestView,
-    #accept_request,
     mark_fulfilled,
     confirm_donation,
 )

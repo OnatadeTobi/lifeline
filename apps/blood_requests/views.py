@@ -21,6 +21,7 @@ logger = logging.getLogger('apps.blood_requests')
 
 from apps.core.utils import mask_email
 
+
 @method_decorator(ratelimit(key='user', rate='10/h', method=['POST']), name='dispatch') # 10 requests per hour
 class BloodRequestCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -179,11 +180,7 @@ class BloodRequestListView(generics.ListAPIView):
             logger.exception(f"Error retrieving blood requests - User: {masked_user}, Error: {str(e)}")
             raise
         
-        
-
-
-
-
+    
 
 
 
@@ -193,90 +190,6 @@ class BloodRequestDetailView(generics.RetrieveAPIView):
     queryset = BloodRequest.objects.all()
 
 
-
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def accept_request(request, request_id):
-#     """Donor accepts a blood request"""
-
-#     # Log the incoming request
-#     logger.info(
-#         f"Donation Accept attempt - User: {request.user.email}, "
-#         f"Request ID: {request_id}"
-#     )
-
-#     # --- Explicit Role & Profile Check ---
-
-#     if not hasattr(request.user, 'role') or request.user.role != 'DONOR':
-#         logger.warning(
-#             f"Unauthorized donation Accept Request by {request.user.email} "
-#             f"(role: {getattr(request.user, 'role', 'unknown')})"
-#         )
-        
-#         return Response(
-#             {'detail': 'Forbidden: Only donors can accept requests'},
-#             status=status.HTTP_403_FORBIDDEN
-#         )
-    
-#     donor = getattr(request.user, 'donor', None)
-#     if not donor:
-#         return Response(
-#             {'detail': 'Donor profile not found'},
-#             status=status.HTTP_400_BAD_REQUEST
-#         )
-
-#     try:
-#         blood_request = BloodRequest.objects.get(id=request_id)
-#         donor = request.user.donor
-        
-#         # Check if donor is eligible
-#         if not donor.is_eligible_to_donate:
-#             return Response(
-#                 {'error': 'You are not eligible to donate yet (56-day cooldown)'},
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-        
-#         # Create donor response
-#         donor_response, created = DonorResponse.objects.get_or_create(
-#             request=blood_request,
-#             donor=donor
-#         )
-        
-#         if not created:
-#             return Response({'message': 'You have already accepted this request'})
-        
-#         # Update request status
-#         blood_request.status = 'MATCHED'
-#         blood_request.save()
-        
-#         # Set donor cooldown
-#         #DonorMatchingService.set_donor_cooldown(donor)
-        
-#         # Notify hospital
-#         send_mail(
-#             subject=f"Donor Accepted: {blood_request.blood_type} Request",
-#             message=f"""
-#             Good news! A donor has accepted your blood request.
-            
-#             Donor Phone: {donor.phone}
-#             Blood Type: {donor.blood_type}
-#             Accepted At: {donor_response.accepted_at}
-            
-#             Please contact them immediately at {donor.phone}
-#             """,
-#             from_email=settings.DEFAULT_FROM_EMAIL,
-#             recipient_list=[blood_request.hospital.user.email],
-#             fail_silently=True
-#         )
-        
-#         return Response({
-#             'message': 'Request accepted successfully',
-#         })
-        
-#     except BloodRequest.DoesNotExist:
-#         return Response({'error': 'Request not found'}, status=status.HTTP_404_NOT_FOUND)
-#     except Exception as e:
-#         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
 # Accept/fulfill actions
 @method_decorator(ratelimit(key='user', rate='30/h', method=['POST']), name='dispatch') # 30 actions per hour
