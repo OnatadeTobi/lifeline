@@ -8,8 +8,6 @@ from apps.donors.models import Donor
 from apps.accounts.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from apps.core.tests.factories import LocalGovernmentFactory
-from django.utils import timezone
-from datetime import timedelta
 
 pytestmark = pytest.mark.django_db
 

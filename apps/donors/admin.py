@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.db.models import Count, Q
+from django.db.models import Count
 from django.utils import timezone
-from apps.core.admin_base import SuperuserAdmin, HospitalRestrictedAdmin
+from apps.core.admin_base import SuperuserAdmin
 from .models import Donor
 
 
@@ -176,72 +176,6 @@ class SuperuserDonorAdmin(DonorAdminMixin, SuperuserAdmin):
         """Update last donation date"""
         count = queryset.update(last_donation_date=timezone.now())
         self.message_user(request, f"{count} donors' last donation date updated.")
-
-
-# class HospitalDonorAdmin(DonorAdminMixin, HospitalRestrictedAdmin):
-#     """Restricted Donor admin for hospital users"""
-    
-#     filter_horizontal = ['service_locations']
-    
-#     def get_queryset(self, request):
-#         """Hospital users see only their donors"""
-#         qs = super().get_queryset(request)
-        
-#         if request.user.is_superuser:
-#             return qs
-        
-#         # Hospital users can see only their donors
-#         if hasattr(request.user, 'hospital_profile') and request.user.hospital_profile:
-#             return qs.filter(hospital=request.user.hospital_profile)
-
-#     # def get_queryset(self, request):
-
-#     #     qs = super().get_queryset(request)
-#     #     if request.user.is_superuser:
-#     #         return qs
-        
-#     #     if hasattr(request.user, 'hospital_profile') and request.user.hospital_profile:
-#     #         # Only donors serving hospital’s areas
-#     #         return qs.filter(hospital=request.user.hospital_profile)
-#     #     return qs.none()
-
-    
-#     def has_add_permission(self, request):
-#         """Hospital users can add donors"""
-#         return hasattr(request.user, 'hospital_profile') and request.user.hospital_profile
-    
-#     def has_change_permission(self, request, obj=None):
-#         """Hospital users can edit donors"""
-#         if request.user.is_superuser:
-#             return True
-        
-#         if not obj:
-#             return True
-        
-#         # Hospital users can edit any donor
-#         return True
-    
-#     def has_delete_permission(self, request, obj=None):
-#         """Hospital users cannot delete donors"""
-#         return False
-    
-#     def get_actions(self, request):
-#         """Limited actions for hospital users"""
-#         actions = super().get_actions(request)
-        
-#         actions['mark_as_available'] = (
-#             self.mark_as_available,
-#             'mark_as_available',
-#             'Mark selected donors as available'
-#         )
-        
-#         return actions
-    
-#     @admin.action(description="Mark selected donors as available")
-#     def mark_as_available(self, request, queryset):
-#         """Mark donors as available"""
-#         count = queryset.update(is_available=True)
-#         self.message_user(request, f"{count} donors marked as available.")
 
 
 class DynamicDonorAdmin(SuperuserDonorAdmin):

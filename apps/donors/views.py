@@ -1,8 +1,7 @@
-from rest_framework import generics, status
+from rest_framework import generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from .models import Donor
 from .serializers import DonorRegistrationSerializer, DonorSerializer
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
@@ -17,6 +16,7 @@ logger = logging.getLogger('apps.donors')
 class DonorRegistrationView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = DonorRegistrationSerializer
+
 
 # Profile updates - reasonable limits
 @method_decorator(ratelimit(key='user', rate='20/h', method=['PUT', 'PATCH']), name='dispatch') # 20 updates per hour
