@@ -177,4 +177,3 @@ def create_dynamic_admin_class(base_admin_class):
         pass
     
     return DynamicAdmin
-

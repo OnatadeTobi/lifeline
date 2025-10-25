@@ -4,11 +4,6 @@ Management command to set up admin permissions and groups for the Lifeline appli
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from apps.accounts.models import User
-from apps.hospitals.models import Hospital
-from apps.donors.models import Donor
-from apps.blood_requests.models import BloodRequest, DonorResponse
-from apps.locations.models import State, LocalGovernment
 
 
 class Command(BaseCommand):

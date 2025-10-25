@@ -4,12 +4,7 @@ Provides common functionality for both superuser and hospital-restricted admin i
 """
 import csv
 from django.http import HttpResponse
-from django.contrib import admin
-from django.contrib.admin import ModelAdmin
 from unfold.admin import ModelAdmin as UnfoldModelAdmin
-from django.utils.html import format_html
-from django.db.models import Q
-from typing import Any, Optional
 
 
 class BaseAdminMixin:

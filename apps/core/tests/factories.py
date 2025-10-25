@@ -1,15 +1,12 @@
 import factory
-from factory.declarations import Sequence, SubFactory, LazyAttribute
+from factory.declarations import Sequence, SubFactory
 from factory.faker import Faker
 from factory.django import DjangoModelFactory
-from django.contrib.auth import get_user_model
 from apps.accounts.models import User
 from apps.hospitals.models import Hospital
 from apps.donors.models import Donor
 from apps.blood_requests.models import BloodRequest, DonorResponse
 from apps.locations.models import State, LocalGovernment
-from django.utils import timezone
-from datetime import timedelta
 
 
 class UserFactory(DjangoModelFactory):
