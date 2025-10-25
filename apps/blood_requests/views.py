@@ -13,12 +13,15 @@ from .serializers import (
 from .services import DonorMatchingService
 from rest_framework.views import APIView
 from rest_framework import exceptions
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 
 import logging
 logger = logging.getLogger('apps.blood_requests')
 
 from apps.core.utils import mask_email
 
+@method_decorator(ratelimit(key='user', rate='10/h', method=['POST']), name='dispatch') # 10 requests per hour
 class BloodRequestCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = BloodRequestCreateSerializer
@@ -275,7 +278,8 @@ class BloodRequestDetailView(generics.RetrieveAPIView):
 #     except Exception as e:
 #         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
-
+# Accept/fulfill actions
+@method_decorator(ratelimit(key='user', rate='30/h', method=['POST']), name='dispatch') # 30 actions per hour
 class AcceptRequestView(APIView):
     permission_classes = [IsAuthenticated]
 

@@ -2,7 +2,11 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny
 from .models import State, LocalGovernment
 from .serializers import StateSerializer, LocalGovernmentSerializer
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 
+# Public endpoints - prevent scraping
+@method_decorator(ratelimit(key='ip', rate='1000/h'), name='dispatch') # 1000 requests per hour
 class StateListView(generics.ListAPIView):
     """Public endpoint - no auth required"""
     permission_classes = [AllowAny]

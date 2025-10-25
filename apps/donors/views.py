@@ -4,17 +4,22 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from .models import Donor
 from .serializers import DonorRegistrationSerializer, DonorSerializer
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 
 from apps.core.utils import mask_email
 
 import logging
 logger = logging.getLogger('apps.donors')
 
-
+# Registration rate limits
+@method_decorator(ratelimit(key='ip', rate='3/h', method=['POST']), name='dispatch') # 3 registrations per hour
 class DonorRegistrationView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = DonorRegistrationSerializer
 
+# Profile updates - reasonable limits
+@method_decorator(ratelimit(key='user', rate='20/h', method=['PUT', 'PATCH']), name='dispatch') # 20 updates per hour
 class DonorProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = DonorSerializer

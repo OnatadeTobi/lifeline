@@ -11,13 +11,21 @@ from django.core.mail import send_mail
 from django.conf import settings
 from datetime import timedelta
 import random
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 
 import logging
 logger = logging.getLogger('apps.accounts')
 
+
+# Login attempts - strict limiting
+@method_decorator(ratelimit(key='ip', rate='5/5m', method=['POST']), name='dispatch') # 5 attempts per 5 minutes
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
+
+# Email verification - moderate limiting
+@ratelimit(key='ip', rate='10/30m', method=['POST'])  # 10 attempts per 30 minutes
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def verify_email(request):
@@ -91,6 +99,8 @@ def resend_verification(request):
     return Response({'message': 'Verification code resent if account exists'})
 
 
+# Password reset - prevent abuse
+@ratelimit(key='ip', rate='3/15m', method=['POST'])  # 3 attempts per 15 minutes
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def password_reset_request(request):

@@ -66,10 +66,12 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django_ratelimit.middleware.RatelimitMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.core.middleware.RateLimitHeadersMiddleware',
 ]
 
 # CORS Settings (permissive for dev, lock down in prod)
@@ -209,6 +211,15 @@ UNFOLD = {
     "SHOW_VIEW_ON_SITE": True,
 }
 
+
+# Rate Limiting Settings
+RATELIMIT_ENABLE = True
+RATELIMIT_USE_CACHE = 'default'  # Uses your cache backend
+RATELIMIT_FAIL_OPEN = False      # Block requests if cache fails
+
+# Custom rate limit response
+RATELIMIT_VIEW = 'apps.core.views.ratelimit_error'
+
 # python manage.py setup_admin_permissions
 # python manage.py loaddata fixtures/lagos_locations.json
 
@@ -287,6 +298,14 @@ LOGGING = {
             'formatter': 'verbose',
             'level': 'CRITICAL',
         },
+
+        # Rate limit logs
+        'ratelimit': {
+            'class': 'logging.FileHandler',
+            'filename': LOGS_DIR / 'ratelimit.log',
+            'level': 'INFO',
+            'formatter': 'verbose',
+        },
     },
     
     # Define loggers for different parts of your app
@@ -317,6 +336,19 @@ LOGGING = {
             'handlers': ['error_file', 'critical_file'],
             'level': 'WARNING',
             'propagate': False,
+        },
+
+        # Rate limit logs
+        'django.ratelimit': {
+            'handlers': ['ratelimit', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+
+        'ratelimit': {  # Added a specific logger for the ratelimit app
+            'handlers': ['ratelimit', 'console'],
+            'level': 'INFO',
+            'propagate': True,
         },
     },
     
