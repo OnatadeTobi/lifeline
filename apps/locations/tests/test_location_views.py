@@ -4,7 +4,6 @@ Test suite for location functionality.
 import pytest
 from django.urls import reverse
 from rest_framework import status
-from apps.locations.models import State, LocalGovernment
 from apps.core.tests.factories import StateFactory, LocalGovernmentFactory
 
 pytestmark = pytest.mark.django_db

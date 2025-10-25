@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.utils.html import format_html
 from django.db.models import Count
 from apps.core.admin_base import SuperuserAdmin
 from .models import State, LocalGovernment
