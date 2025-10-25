@@ -94,7 +94,7 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
 
             subject = "Your Lifeline verification code"
             message = f"Your verification code is: {code}\nThis code expires in 24 hours."
-            print(code)
+            
             send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
             logger.info("Verification email sent successfully to hospital: %s", mask_email(email))
         except Exception as e:

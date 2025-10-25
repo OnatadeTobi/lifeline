@@ -1,6 +1,5 @@
 from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .models import Hospital
 from .serializers import HospitalRegistrationSerializer, HospitalSerializer
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator

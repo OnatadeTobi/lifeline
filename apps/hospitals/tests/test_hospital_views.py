@@ -8,7 +8,6 @@ from apps.hospitals.models import Hospital
 from apps.accounts.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from apps.core.tests.factories import LocalGovernmentFactory
-from django.utils import timezone
 
 pytestmark = pytest.mark.django_db
 
