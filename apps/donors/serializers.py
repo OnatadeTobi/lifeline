@@ -16,6 +16,8 @@ from apps.core.utils import mask_email
 import logging
 logger = logging.getLogger('apps.donors')
 
+from smtplib import SMTPException
+
 
 User = get_user_model()
 
@@ -69,6 +71,18 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
         return value
     
     def create(self, validated_data):
+        """
+        Create a donor profile based on validated data.
+
+        Steps:
+        1. Create a user account (handle race condition on unique email)
+        2. Create a donor profile
+        3. Create an email verification code (6-digit) and send email
+
+        Returns:
+            Donor: The newly created donor profile.
+        """
+    
         email = validated_data.pop('email')
         first_name=validated_data.pop('first_name')
         last_name=validated_data.pop('last_name')
@@ -87,6 +101,7 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
                 role='DONOR'
             )
             logger.info("User account created successfully for donor: %s", mask_email(email))
+
         except IntegrityError:
             # Turn DB constraint into serializer validation error
             logger.error("IntegrityError during donor registration for email: %s", mask_email(email), exc_info=True)
@@ -107,8 +122,12 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
             subject = "Your Lifeline verification code"
             message = f"Your verification code is: {code}\nThis code expires in 24 hours."
             
-            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
             logger.info("Verification email sent successfully to donor: %s", mask_email(email))
+
+        except SMTPException as e:  
+            logger.error("SMTP error sending email to %s", mask_email(email), exc_info=True)
+            
         except Exception as e:
             # Don't fail registration if email sending/verification model has issue
             logger.error("[DONOR] Failed to send verification email to %s: %s", mask_email(email), str(e), exc_info=True)

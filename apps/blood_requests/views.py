@@ -20,6 +20,7 @@ import logging
 logger = logging.getLogger('apps.blood_requests')
 
 from apps.core.utils import mask_email
+from smtplib import SMTPException
 
 
 @method_decorator(ratelimit(key='user', rate='10/h', method=['POST']), name='dispatch') # 10 requests per hour
@@ -89,14 +90,18 @@ class BloodRequestCreateView(generics.CreateAPIView):
             """
             logger.info(f"Sending email - Donor: {masked_donor}, Subject: {subject}")
 
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [donor.user.email],
-                fail_silently=True
-            )
-            logger.info(f"Email sent successfully - Donor: {masked_donor}")
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [donor.user.email],
+                    fail_silently=False
+                )
+                logger.info(f"Email sent successfully - Donor: {masked_donor}")
+
+            except SMTPException as e:
+                logger.error(f"Email failed - Donor: {masked_donor}, Error: {str(e)}")
 
         except Exception as e:
             logger.error(f"Email failed - Donor: {masked_donor}, Error: {str(e)}")
@@ -267,13 +272,16 @@ class AcceptRequestView(APIView):
                     """,
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[blood_request.hospital.user.email],
-                    fail_silently=True
+                    fail_silently=False
                 )
 
                 logger.info(
                     f"Hospital notification sent - Hospital: {hospital_masked}, "
                     f"Request ID: {request_id}"
                 )
+
+            except SMTPException as e:
+                logger.error(f"Email failed - Hospital: {hospital_masked}, Error: {str(e)}")
 
             except Exception as email_error:
                 logger.error(

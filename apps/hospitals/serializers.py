@@ -18,6 +18,8 @@ from apps.core.utils import mask_email
 import logging
 logger = logging.getLogger('apps.hospitals')
 
+from smtplib import SMTPException
+
 
 User = get_user_model()
 
@@ -95,8 +97,12 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
             subject = "Your Lifeline verification code"
             message = f"Your verification code is: {code}\nThis code expires in 24 hours."
             
-            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
             logger.info("Verification email sent successfully to hospital: %s", mask_email(email))
+
+        except SMTPException as e:  
+            logger.error("SMTP error sending email to %s", mask_email(email), exc_info=True)
+
         except Exception as e:
             logger.error("[HOSPITAL] Failed to send verification email to %s: %s", mask_email(email), str(e), exc_info=True)
 

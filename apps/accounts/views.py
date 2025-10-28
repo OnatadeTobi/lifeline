@@ -17,6 +17,8 @@ from django.utils.decorators import method_decorator
 import logging
 logger = logging.getLogger('apps.accounts')
 
+from smtplib import SMTPException
+
 
 # Login attempts - strict limiting
 @method_decorator(ratelimit(key='ip', rate='5/5m', method=['POST']), name='dispatch') # 5 attempts per 5 minutes
@@ -90,8 +92,11 @@ def resend_verification(request):
         subject = "Your Lifeline verification code"
         message = f"Your verification code is: {code}\nThis code expires in 24 hours."
 
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
         logger.debug(f"Verification email sent to: {masked_email}")
+
+    except SMTPException as e:
+                logger.error(f"Email failed (Resend Verification) : {masked_email}, Error: {str(e)}")
 
     except Exception as e:
         logger.error(f"Error resending verification for user ID {user.id if user else 'unknown'}: {e}")
@@ -129,9 +134,12 @@ def password_reset_request(request):
 
         subject = "Your Lifeline password reset code"
         message = f"Your password reset code is: {code}\nThis code expires in 1 hour."
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
 
         logger.debug(f"Password reset email sent to {masked_email}")
+
+    except SMTPException as e:
+                logger.error(f"Email failed (Password Reset) - : {masked_email}, Error: {str(e)}")
 
     except Exception as e:
         logger.error(f"Error generating password reset for {masked_email}")
