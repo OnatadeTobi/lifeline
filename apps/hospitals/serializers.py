@@ -15,6 +15,7 @@ import random
 
 from apps.core.utils import mask_email
 from smtplib import SMTPException
+from django.db import transaction
 
 import logging
 logger = logging.getLogger('apps.hospitals')
@@ -71,40 +72,63 @@ class HospitalRegistrationSerializer(serializers.ModelSerializer):
 
         # Create user (handle possible race on unique email)
         try:
-            user = User.objects.create_user(
-                email=email,
-                username=email,
-                password=password,
-                role='HOSPITAL'
-            )
-            logger.info("User account created successfully for hospital: %s", mask_email(email))
-        except IntegrityError:
-            logger.error("IntegrityError during hospital registration for email: %s", mask_email(email), exc_info=True)
-            raise serializers.ValidationError({'email': 'Email already registered'})
+            with transaction.atomic():
+                try:
+                    user = User.objects.create_user(
+                        email=email,
+                        username=email,
+                        password=password,
+                        role='HOSPITAL'
+                    )
+                    logger.info("User account created successfully for hospital: %s", mask_email(email))
 
-        # Create Hospital profile
-        hospital = Hospital.objects.create(user=user, **validated_data)
-        hospital.service_locations.set(service_locations)
-        logger.info("Hospital profile created for user: %s (ID: %s)", mask_email(email), hospital.id)
+                except IntegrityError:
+                    logger.error("IntegrityError during hospital registration for email: %s", mask_email(email), exc_info=True)
+                    raise serializers.ValidationError({'email': 'Email already registered'})
 
-        # Create email verification code and send
-        try:
-            code = f"{random.randint(0, 999999):06d}"
-            expires_at = timezone.now() + timedelta(hours=24)
-            EmailVerification.objects.create(user=user, code=code, expires_at=expires_at)
+                # Create Hospital profile
+                hospital = Hospital.objects.create(user=user, **validated_data)
+                hospital.service_locations.set(service_locations)
+                logger.info("Hospital profile created for user: %s (ID: %s)", mask_email(email), hospital.id)
 
-            subject = "Your Lifeline verification code"
-            message = f"Your verification code is: {code}\nThis code expires in 24 hours."
+                # Create email verification code and send
+                code = f"{random.randint(0, 999999):06d}"
+                expires_at = timezone.now() + timedelta(hours=24)
+                EmailVerification.objects.create(user=user, code=code, expires_at=expires_at)
+                logger.debug("Verification code created for Hospital: %s", mask_email(email))
+
+                # Send verification email - this is the critical step
+                subject = "Your Lifeline verification code"
+                message = f"Your verification code is: {code}\nThis code expires in 24 hours."
             
-            try:
-                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
-                logger.info("Verification email sent successfully to hospital: %s", mask_email(email))
+                try:
+                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+                    logger.info("Verification email sent successfully to hospital: %s", mask_email(email))
 
-            except SMTPException as e:  
-                logger.error("SMTP error sending email to %s", mask_email(email), exc_info=True)
+                except SMTPException as e:  
+                    logger.error("SMTP error sending email to %s", mask_email(email), exc_info=True)
+                    # Raise to trigger transaction rollback
+                    raise serializers.ValidationError({
+                        'email': 'Failed to send verification email. Please try again later or contact support.'
+                    })
 
+                except Exception as e:
+                    logger.error("[HOSPITAL] Failed to send verification email to %s: %s", mask_email(email), str(e), exc_info=True)
+                    # Raise to trigger transaction rollback
+                    raise serializers.ValidationError({
+                        'email': 'Failed to send verification email. Please try again later.'
+                    })
+                
+        except serializers.ValidationError:
+            # Re-raise validation errors (they already have proper messages)
+            raise
+            
         except Exception as e:
-            logger.error("[HOSPITAL] Failed to send verification email to %s: %s", mask_email(email), str(e), exc_info=True)
+            # Catch any other unexpected errors
+            logger.error("[HOSPITAL] Unexpected error during registration for %s", mask_email(email), exc_info=True)
+            raise serializers.ValidationError({
+                'non_field_errors': 'Registration failed. Please try again later.'
+            })
 
         return hospital
     

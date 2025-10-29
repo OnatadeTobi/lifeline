@@ -10,6 +10,7 @@ from apps.locations.models import LocalGovernment
 from apps.locations.serializers import LocalGovernmentSerializer
 from apps.accounts.models import EmailVerification
 import random
+from django.db import transaction
 
 from apps.core.utils import mask_email
 from smtplib import SMTPException
@@ -91,45 +92,66 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
         
         # Create user (handle possible race on unique email)
         try:
-            user = User.objects.create_user(
-                email=email,
-                username=email,
-                first_name=first_name,
-                last_name=last_name,
-                password=password,
-                role='DONOR'
-            )
-            logger.info("User account created successfully for donor: %s", mask_email(email))
+            with transaction.atomic():
+                try:
+                    user = User.objects.create_user(
+                        email=email,
+                        username=email,
+                        first_name=first_name,
+                        last_name=last_name,
+                        password=password,
+                        role='DONOR'
+                    )
+                    logger.info("User account created successfully for donor: %s", mask_email(email))
 
-        except IntegrityError:
-            # Turn DB constraint into serializer validation error
-            logger.error("IntegrityError during donor registration for email: %s", mask_email(email), exc_info=True)
-            raise serializers.ValidationError({'email': 'Email already registered'})
+                except IntegrityError:
+                    # Turn DB constraint into serializer validation error
+                    logger.error("IntegrityError during donor registration for email: %s", mask_email(email), exc_info=True)
+                    raise serializers.ValidationError({'email': 'Email already registered'})
         
-        # Create donor profile
-        donor = Donor.objects.create(user=user, **validated_data)
-        donor.service_locations.set(service_locations)
-        logger.info("Donor profile created for user: %s (ID: %s)", mask_email(email), donor.id)
+                # Create donor profile
+                donor = Donor.objects.create(user=user, **validated_data)
+                donor.service_locations.set(service_locations)
+                logger.info("Donor profile created for user: %s (ID: %s)", mask_email(email), donor.id)
 
-        
-        # Create email verification code (6-digit) and send email
-        try:
-            code = f"{random.randint(0, 999999):06d}"
-            expires_at = timezone.now() + timedelta(hours=24)
-            EmailVerification.objects.create(user=user, code=code, expires_at=expires_at)
+                # Create email verification code (6-digit) and send email
+                code = f"{random.randint(0, 999999):06d}"
+                expires_at = timezone.now() + timedelta(hours=24)
+                EmailVerification.objects.create(user=user, code=code, expires_at=expires_at)
+                logger.debug("Verification code created for donor: %s", mask_email(email))
 
-            subject = "Your Lifeline verification code"
-            message = f"Your verification code is: {code}\nThis code expires in 24 hours."
+                # Send verification email - this is the critical step
+                subject = "Your Lifeline verification code"
+                message = f"Your verification code is: {code}\nThis code expires in 24 hours."
             
-            try:
-                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
-                logger.info("Verification email sent successfully to donor: %s", mask_email(email))
+                try:
+                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+                    logger.info("Verification email sent successfully to donor: %s", mask_email(email))
 
-            except SMTPException as e:  
-                logger.error("SMTP error sending email to %s", mask_email(email), exc_info=True)
+                except SMTPException as e:  
+                    logger.error("SMTP error sending email to %s", mask_email(email), exc_info=True)
+                    # Raise to trigger transaction rollback
+                    raise serializers.ValidationError({
+                        'email': 'Failed to send verification email. Please try again later or contact support.'
+                    })
+            
+                except Exception as e:
+                    logger.error("[DONOR] Failed to send verification email to %s: %s", mask_email(email), str(e), exc_info=True)
+                    # Raise to trigger transaction rollback
+                    raise serializers.ValidationError({
+                        'email': 'Failed to send verification email. Please try again later.'
+                    })
+                
+        except serializers.ValidationError:
+            # Re-raise validation errors (they already have proper messages)
+            raise
             
         except Exception as e:
-            logger.error("[DONOR] Failed to send verification email to %s: %s", mask_email(email), str(e), exc_info=True)
+            # Catch any other unexpected errors
+            logger.error("[DONOR] Unexpected error during registration for %s", mask_email(email), exc_info=True)
+            raise serializers.ValidationError({
+                'non_field_errors': 'Registration failed. Please try again later.'
+            })
 
         return donor
 
