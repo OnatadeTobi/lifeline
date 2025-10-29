@@ -12,11 +12,10 @@ from apps.accounts.models import EmailVerification
 import random
 
 from apps.core.utils import mask_email
+from smtplib import SMTPException
 
 import logging
 logger = logging.getLogger('apps.donors')
-
-from smtplib import SMTPException
 
 
 User = get_user_model()
@@ -122,14 +121,14 @@ class DonorRegistrationSerializer(serializers.ModelSerializer):
             subject = "Your Lifeline verification code"
             message = f"Your verification code is: {code}\nThis code expires in 24 hours."
             
-            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
-            logger.info("Verification email sent successfully to donor: %s", mask_email(email))
+            try:
+                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+                logger.info("Verification email sent successfully to donor: %s", mask_email(email))
 
-        except SMTPException as e:  
-            logger.error("SMTP error sending email to %s", mask_email(email), exc_info=True)
+            except SMTPException as e:  
+                logger.error("SMTP error sending email to %s", mask_email(email), exc_info=True)
             
         except Exception as e:
-            # Don't fail registration if email sending/verification model has issue
             logger.error("[DONOR] Failed to send verification email to %s: %s", mask_email(email), str(e), exc_info=True)
 
         return donor

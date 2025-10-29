@@ -16,11 +16,11 @@ from rest_framework import exceptions
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
 
-import logging
-logger = logging.getLogger('apps.blood_requests')
-
 from apps.core.utils import mask_email
 from smtplib import SMTPException
+
+import logging
+logger = logging.getLogger('apps.blood_requests')
 
 
 @method_decorator(ratelimit(key='user', rate='10/h', method=['POST']), name='dispatch') # 10 requests per hour
@@ -51,28 +51,50 @@ class BloodRequestCreateView(generics.CreateAPIView):
                     f"Blood Type: {blood_request.blood_type}"
                 )
 
-            for donor in matching_donors:
-                try:
-                    self.send_donor_notification(donor, blood_request)
-                    logger.info(f"Notification sent - Donor ID: {donor.id}, Request ID: {blood_request.id}")
-                except Exception as e:
-                    logger.error(f"Failed to notify donor ID: {donor.id} for request ID: {blood_request.id}")
+            else:
+                # Track notification results
+                successful_notifications = 0
+                failed_notifications = []
 
-            return blood_request
+                for donor in matching_donors:
+                    try:
+                        self.send_donor_notification(donor, blood_request)
+                        successful_notifications += 1
+                        logger.info(f"Notification sent - Donor ID: {donor.id}, Request ID: {blood_request.id}")
+
+                    except Exception as e:
+                        failed_notifications.append(donor.id)
+                        logger.error(
+                            f"Failed to notify donor ID: {donor.id} for request ID: {blood_request.id}, "
+                            f"Error: {str(e)}"
+                        )
+
+                # Log summary
+                logger.info(
+                    f"Notification summary - Request ID: {blood_request.id}, "
+                    f"Successful: {successful_notifications}/{len(matching_donors)}"
+                )
+                
+                if failed_notifications:
+                    logger.warning(
+                        f"Failed to notify {len(failed_notifications)} donors for request ID: {blood_request.id}, "
+                        f"Failed donor IDs: {failed_notifications}"
+                    )
         
         except Exception as e:
-            logger.exception(f"Unexpected error creating blood request: {str(e)}")
+            logger.exception(f"Unexpected error creating blood request for user: {masked_user}")
             raise
 
     
     def send_donor_notification(self, donor, request):
+        """Send email notification to donor"""
+
         masked_donor = mask_email(donor.user.email)
         logger.debug(f"Preparing notification - Donor ID: {donor.id}, Request ID: {request.id}")
 
-        """Send email notification to donor"""
-        try:
-            subject = f"Urgent: {request.blood_type} Blood Needed"
-            message = f"""
+        
+        subject = f"Urgent: {request.blood_type} Blood Needed"
+        message = f"""
             Hello {donor.user.first_name},
             
             A blood request has been posted that matches your profile:
@@ -88,23 +110,26 @@ class BloodRequestCreateView(generics.CreateAPIView):
             
             Thank you for being a lifesaver!
             """
-            logger.info(f"Sending email - Donor: {masked_donor}, Subject: {subject}")
+        
+        logger.info(f"Sending email - Donor: {masked_donor}, Subject: {subject}")
 
-            try:
-                send_mail(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [donor.user.email],
-                    fail_silently=False
-                )
-                logger.info(f"Email sent successfully - Donor: {masked_donor}")
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [donor.user.email],
+                fail_silently=False
+            )
+            logger.info(f"Email sent successfully - Donor: {masked_donor}")
 
-            except SMTPException as e:
-                logger.error(f"Email failed - Donor: {masked_donor}, Error: {str(e)}")
+        except SMTPException as e:
+            logger.error(f"SMTP error sending email to donor: {masked_donor}, Error: {str(e)}")
+            raise  # Re-raise so perform_create knows it failed
 
         except Exception as e:
-            logger.error(f"Email failed - Donor: {masked_donor}, Error: {str(e)}")
+            logger.error(f"Unexpected error sending email to donor: {masked_donor}, Error: {str(e)}")
+            raise  # Re-raise so perform_create knows it failed
 
 
 

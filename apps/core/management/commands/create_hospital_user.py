@@ -93,7 +93,7 @@ class Command(BaseCommand):
             hospital_group = Group.objects.get(name='Hospital Admin')
             user.groups.add(hospital_group)
             self.stdout.write(
-                self.style.SUCCESS(f'Added user to Hospital Admin group')
+                self.style.SUCCESS('Added user to Hospital Admin group')
             )
         except Group.DoesNotExist:
             self.stdout.write(

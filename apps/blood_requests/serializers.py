@@ -1,10 +1,10 @@
 from rest_framework import serializers
 from .models import BloodRequest, DonorResponse
+from apps.core.utils import mask_email
 
 import logging
 logger = logging.getLogger('apps.blood_requests')
 
-from apps.core.utils import mask_email
 
 
 class BloodRequestCreateSerializer(serializers.ModelSerializer):

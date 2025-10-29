@@ -13,11 +13,11 @@ from datetime import timedelta
 import random
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
+from smtplib import SMTPException
 
 import logging
 logger = logging.getLogger('apps.accounts')
 
-from smtplib import SMTPException
 
 
 # Login attempts - strict limiting
@@ -38,7 +38,7 @@ def verify_email(request):
     masked_email = f"{email[:3]}****@..." if email else None
 
     if not email or not code:
-        logger.warning(f"Email verification attempt missing fields.")
+        logger.warning("Email verification attempt missing fields.")
         return Response({'error': 'email and code are required'}, status=status.HTTP_400_BAD_REQUEST)
 
     user = User.objects.filter(email__iexact=email).first()
@@ -134,12 +134,12 @@ def password_reset_request(request):
 
         subject = "Your Lifeline password reset code"
         message = f"Your password reset code is: {code}\nThis code expires in 1 hour."
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
 
-        logger.debug(f"Password reset email sent to {masked_email}")
-
-    except SMTPException as e:
-                logger.error(f"Email failed (Password Reset) - : {masked_email}, Error: {str(e)}")
+        try:
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+            logger.debug(f"Password reset email sent to {masked_email}")
+        except SMTPException as e:
+                    logger.error(f"Email failed (Password Reset) - : {masked_email}, Error: {str(e)}")
 
     except Exception as e:
         logger.error(f"Error generating password reset for {masked_email}")

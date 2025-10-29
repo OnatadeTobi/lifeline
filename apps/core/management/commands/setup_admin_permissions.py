@@ -89,11 +89,11 @@ class Command(BaseCommand):
         self.stdout.write('PERMISSION SETUP SUMMARY')
         self.stdout.write('='*50)
         
-        self.stdout.write(f'\nHospital Admin Group:')
+        self.stdout.write('\nHospital Admin Group:')
         self.stdout.write(f'  - Users: {hospital_admin_group.user_set.count()}')
         self.stdout.write(f'  - Permissions: {hospital_admin_group.permissions.count()}')
         
-        self.stdout.write(f'\nSuper Admin Group:')
+        self.stdout.write('\nSuper Admin Group:')
         self.stdout.write(f'  - Users: {superuser_group.user_set.count()}')
         self.stdout.write(f'  - Permissions: {superuser_group.permissions.count()}')
         
