@@ -32,7 +32,9 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
+#ALLOWED_HOSTS = []
+
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # CSRF_TRUSTED_ORIGINS = [
 #     'https://86270035b70d.ngrok-free.app', 'http://127.0.0.1:8000'
@@ -305,6 +307,11 @@ LOGGING = {
             'level': 'INFO',
             'formatter': 'verbose',
         },
+
+        'mail_admins': {
+        'level': 'ERROR',
+        'class': 'django.utils.log.AdminEmailHandler',
+        },
     },
     
     # Define loggers for different parts of your app
@@ -349,6 +356,12 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
     },
     
     # Root logger (catches everything else)
@@ -357,3 +370,12 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+ADMIN_EMAIL = env('ADMIN_EMAIL')
+
+ADMINS = [
+    ("Admin", ADMIN_EMAIL),
+]
+
+SERVER_EMAIL = DEFAULT_FROM_EMAIL  # can be anything, not important for testing
+EMAIL_SUBJECT_PREFIX = "[LIFELINE ERROR] "
