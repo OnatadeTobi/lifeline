@@ -287,7 +287,7 @@ LOGGING = {
             'maxBytes': 1024 * 1024 * 10,  # 10MB
             'backupCount': 5,
             'formatter': 'verbose',
-            'level': 'ERROR',  
+            'level': 'ERROR',
         },
         
         # Critical issues (like database failures)
