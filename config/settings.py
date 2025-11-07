@@ -264,7 +264,7 @@ LOGGING = {
     # Define where logs go
     'handlers': {
         # Console output (what you see in terminal)
-        'console': {
+        'console': {    
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
             'level': 'INFO',
