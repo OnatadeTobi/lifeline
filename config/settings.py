@@ -209,6 +209,15 @@ DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 FRONTEND_URL = env('FRONTEND_URL')
 
 
+ADMIN_EMAIL = env('ADMIN_EMAIL')
+
+ADMINS = [
+    ("Admin", ADMIN_EMAIL),
+]
+
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_SUBJECT_PREFIX = "[LIFELINE ERROR] "
+
 
 UNFOLD = {
     "SITE_TITLE": "Lifeline Admin Portal",
@@ -372,12 +381,3 @@ LOGGING = {
         'level': 'INFO',
     },
 }
-
-ADMIN_EMAIL = env('ADMIN_EMAIL')
-
-ADMINS = [
-    ("Admin", ADMIN_EMAIL),
-]
-
-SERVER_EMAIL = DEFAULT_FROM_EMAIL  # can be anything, not important for testing
-EMAIL_SUBJECT_PREFIX = "[LIFELINE ERROR] "
