@@ -32,9 +32,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-#ALLOWED_HOSTS = []
-
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
 # CSRF_TRUSTED_ORIGINS = [
 #     'https://86270035b70d.ngrok-free.app', 'http://127.0.0.1:8000'
