@@ -21,13 +21,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev && rm
 COPY --from=build /root/.local /home/myuser/.local
 RUN chown -R myuser:myuser /home/myuser/.local
 
+# Copy application code first (as root)
+COPY . .
+
+# Create directories that need write access and set ownership
+RUN mkdir -p /app/logs /app/staticfiles /app/media && \
+    chown -R myuser:myuser /app && \
+    chmod +x /app/entrypoint.sh
+
 # Switch to non-root user
 USER myuser
 ENV PATH=/home/myuser/.local/bin:$PATH
-
-# Copy application code
-COPY --chown=myuser:myuser . .
-RUN chmod +x /app/entrypoint.sh
 
 # Expose Gunicorn port
 EXPOSE 8000
