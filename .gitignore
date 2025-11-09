@@ -39,7 +39,3 @@ logs/
 .coverage
 
 tempp
-
-Dockerfile
-entrypoint.sh
-.dockerignore
