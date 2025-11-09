@@ -10,18 +10,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 FROM python:3.13-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
+
+# Create non-root user first
+RUN useradd -m myuser
+
 # Install system deps needed at runtime
 RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev && rm -rf /var/lib/apt/lists/*
-# Copy virtualenv/pip cache from builder
-COPY --from=build /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
-COPY . .
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
 
-# Use a non-root user for security
-RUN useradd -m myuser && chown -R myuser /app
+# Copy virtualenv/pip cache from builder to myuser's home
+COPY --from=build /root/.local /home/myuser/.local
+RUN chown -R myuser:myuser /home/myuser/.local
+
+# Switch to non-root user
 USER myuser
+ENV PATH=/home/myuser/.local/bin:$PATH
+
+# Copy application code
+COPY --chown=myuser:myuser . .
+RUN chmod +x /app/entrypoint.sh
 
 # Expose Gunicorn port
 EXPOSE 8000
