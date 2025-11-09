@@ -41,6 +41,12 @@ else
   echo "Skipping fixture loading (set LOAD_FIXTURES=1 to enable)"
 fi
 
+# Create superuser if env vars are set
+if [ -n "${DJANGO_SUPERUSER_EMAIL:-}" ] && [ -n "${DJANGO_SUPERUSER_PASSWORD:-}" ]; then
+  echo "Creating superuser..."
+  python manage.py createsuperuser --noinput --email "$DJANGO_SUPERUSER_EMAIL" --username admin || echo "Superuser already exists"
+fi
+
 if [ -n "${STATIC_ROOT:-}" ]; then
   echo "Collecting static files to ${STATIC_ROOT}"
   python manage.py collectstatic --noinput
@@ -48,10 +54,5 @@ else
   echo "STATIC_ROOT not set, skipping collectstatic"
 fi
 
-if [ -n "${DJANGO_SUPERUSER_EMAIL:-}" ]; then
-  echo "Creating superuser..."
-  python manage.py createsuperuser --noinput --email "$DJANGO_SUPERUSER_EMAIL" || echo "Superuser exists"
-fi
-
 echo "Starting Gunicorn..."
-exec gunicorn "$@"
+exec "$@"
