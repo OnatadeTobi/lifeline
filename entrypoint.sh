@@ -7,9 +7,9 @@ WAIT_DB_SLEEP=${WAIT_DB_SLEEP:-3}
 
 echo "Starting entrypoint script..."
 
-# Wait for database to be ready
-if [ -n "${DATABASE_URL:-}" ]; then
-  echo "Waiting for database..."
+# Wait for database to be ready (only for PostgreSQL)
+if [ -n "${DATABASE_URL:-}" ] && [[ "$DATABASE_URL" == postgres* ]]; then
+  echo "Waiting for PostgreSQL database..."
   for i in $(seq 1 $WAIT_DB_ATTEMPTS); do
     python -c 'import sys, psycopg2, urllib.parse;\ntry:\n d=urllib.parse.urlparse("'$DATABASE_URL'");\n conn=psycopg2.connect(dbname=d.path[1:], user=d.username, password=d.password, host=d.hostname, port=d.port or 5432); conn.close();\n print("DB ready")\n sys.exit(0)\nexcept Exception as e: print(e); sys.exit(1)' && break
     echo "DB not ready yet ($i/$WAIT_DB_ATTEMPTS)... sleeping $WAIT_DB_SLEEP seconds"
@@ -19,6 +19,8 @@ if [ -n "${DATABASE_URL:-}" ]; then
       exit 1
     fi
   done
+else
+  echo "Using SQLite or DATABASE_URL not set, skipping PostgreSQL connection check"
 fi
 
 if [ "$SKIP_MIGRATIONS" != "1" ]; then
