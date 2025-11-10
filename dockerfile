@@ -44,7 +44,7 @@ CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers
 
 
 # # First stage: Install dependencies
-# FROM python:3.13-slim AS build
+# FROM python:3.13-slim AS build 
 # ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 # WORKDIR /app
 # COPY requirements.txt .
