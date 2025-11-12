@@ -61,7 +61,7 @@ class UserAdminMixin:
                     'fields': ('last_login', 'date_joined'),
                     'classes': ('collapse',)
                 })
-            ]
+            ] 
     
     def get_readonly_fields(self, request, obj=None):
         """Readonly fields"""
