@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.db.models import Q
 from apps.core.admin_base import SuperuserAdmin, HospitalRestrictedAdmin
-from .models import User
+from .models import User 
 
 
 class UserAdminMixin:
