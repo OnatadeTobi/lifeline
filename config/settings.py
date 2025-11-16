@@ -257,128 +257,128 @@ RATELIMIT_VIEW = 'apps.core.views.ratelimit_error'
 #LOGS_DIR = BASE_DIR / 'logs'          uncomment  later, testing it for leapcell
 #LOGS_DIR.mkdir(exist_ok=True)
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
     
-    # Define log formats
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {asctime} {message}',
-            'style': '{',
-        },
-    },
+#     # Define log formats
+#     'formatters': {
+#         'verbose': {
+#             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+#             'style': '{',
+#         },
+#         'simple': {
+#             'format': '{levelname} {asctime} {message}',
+#             'style': '{',
+#         },
+#     },
     
-    # Define where logs go
-    'handlers': {
-        # Console output (what you see in terminal)
-        'console': {    
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-            'level': 'INFO',
-        },
+#     # Define where logs go
+#     'handlers': {
+#         # Console output (what you see in terminal)
+#         'console': {    
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'simple',
+#             'level': 'INFO',
+#         },
         
-        # General application logs
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOGS_DIR / 'lifeline.log',
-            'maxBytes': 1024 * 1024 * 10,  # 10MB
-            'backupCount': 5,
-            'formatter': 'verbose',
-            'level': 'INFO',
-        },
+#         # General application logs
+#         'file': {
+#             'class': 'logging.handlers.RotatingFileHandler',
+#             'filename': LOGS_DIR / 'lifeline.log',
+#             'maxBytes': 1024 * 1024 * 10,  # 10MB
+#             'backupCount': 5,
+#             'formatter': 'verbose',
+#             'level': 'INFO',
+#         },
         
-        # Error logs (separate file for quick error checking)
-        'error_file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOGS_DIR / 'errors.log',
-            'maxBytes': 1024 * 1024 * 10,  # 10MB
-            'backupCount': 5,
-            'formatter': 'verbose',
-            'level': 'ERROR',
-        },
+#         # Error logs (separate file for quick error checking)
+#         'error_file': {
+#             'class': 'logging.handlers.RotatingFileHandler',
+#             'filename': LOGS_DIR / 'errors.log',
+#             'maxBytes': 1024 * 1024 * 10,  # 10MB
+#             'backupCount': 5,
+#             'formatter': 'verbose',
+#             'level': 'ERROR',
+#         },
         
-        # Critical issues (like database failures)
-        'critical_file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOGS_DIR / 'critical.log',
-            'maxBytes': 1024 * 1024 * 5,  # 5MB
-            'backupCount': 3,
-            'formatter': 'verbose',
-            'level': 'CRITICAL',
-        },
+#         # Critical issues (like database failures)
+#         'critical_file': {
+#             'class': 'logging.handlers.RotatingFileHandler',
+#             'filename': LOGS_DIR / 'critical.log',
+#             'maxBytes': 1024 * 1024 * 5,  # 5MB
+#             'backupCount': 3,
+#             'formatter': 'verbose',
+#             'level': 'CRITICAL',
+#         },
 
-        # Rate limit logs
-        'ratelimit': {
-            'class': 'logging.FileHandler',
-            'filename': LOGS_DIR / 'ratelimit.log',
-            'level': 'INFO',
-            'formatter': 'verbose',
-        },
+#         # Rate limit logs
+#         'ratelimit': {
+#             'class': 'logging.FileHandler',
+#             'filename': LOGS_DIR / 'ratelimit.log',
+#             'level': 'INFO',
+#             'formatter': 'verbose',
+#         },
 
-        'mail_admins': {
-        'level': 'ERROR',
-        'class': 'django.utils.log.AdminEmailHandler',
-        },
-    },
+#         'mail_admins': {
+#         'level': 'ERROR',
+#         'class': 'django.utils.log.AdminEmailHandler',
+#         },
+#     },
     
-    # Define loggers for different parts of your app
-    'loggers': {
-        # Your app's logger
-        'apps': {
-            'handlers': ['console', 'file', 'error_file', 'critical_file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
+#     # Define loggers for different parts of your app
+#     'loggers': {
+#         # Your app's logger
+#         'apps': {
+#             'handlers': ['console', 'file', 'error_file', 'critical_file'],
+#             'level': 'INFO',
+#             'propagate': False,
+#         },
         
-        # Django's internal logs
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
+#         # Django's internal logs
+#         'django': {
+#             'handlers': ['console', 'file'],
+#             'level': 'INFO',
+#             'propagate': False,
+#         },
         
-        # Database query logs (useful for debugging slow queries)
-        'django.db.backends': {
-            'handlers': ['file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
-        },
+#         # Database query logs (useful for debugging slow queries)
+#         'django.db.backends': {
+#             'handlers': ['file'],
+#             'level': 'DEBUG' if DEBUG else 'INFO',
+#             'propagate': False,
+#         },
         
-        # Security related logs
-        'django.security': {
-            'handlers': ['error_file', 'critical_file'],
-            'level': 'WARNING',
-            'propagate': False,
-        },
+#         # Security related logs
+#         'django.security': {
+#             'handlers': ['error_file', 'critical_file'],
+#             'level': 'WARNING',
+#             'propagate': False,
+#         },
 
-        # Rate limit logs
-        'django.ratelimit': {
-            'handlers': ['ratelimit', 'console'],
-            'level': 'INFO',
-            'propagate': True,
-        },
+#         # Rate limit logs
+#         'django.ratelimit': {
+#             'handlers': ['ratelimit', 'console'],
+#             'level': 'INFO',
+#             'propagate': True,
+#         },
 
-        'ratelimit': {  # Added a specific logger for the ratelimit app
-            'handlers': ['ratelimit', 'console'],
-            'level': 'INFO',
-            'propagate': True,
-        },
+#         'ratelimit': {  # Added a specific logger for the ratelimit app
+#             'handlers': ['ratelimit', 'console'],
+#             'level': 'INFO',
+#             'propagate': True,
+#         },
 
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    },
+#         'django.request': {
+#             'handlers': ['mail_admins'],
+#             'level': 'ERROR',
+#             'propagate': True,
+#         },
+#     },
     
-    # Root logger (catches everything else)
-    'root': {
-        'handlers': ['console', 'file'],
-        'level': 'INFO',
-    },
-}
+#     # Root logger (catches everything else)
+#     'root': {
+#         'handlers': ['console', 'file'],
+#         'level': 'INFO',
+#     },
+# }
