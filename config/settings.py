@@ -254,8 +254,8 @@ RATELIMIT_VIEW = 'apps.core.views.ratelimit_error'
 
 
 # Create logs directory if it doesn't exist
-LOGS_DIR = BASE_DIR / 'logs'
-LOGS_DIR.mkdir(exist_ok=True)
+#LOGS_DIR = BASE_DIR / 'logs'          uncomment  later, testing it for leapcell
+#LOGS_DIR.mkdir(exist_ok=True)
 
 LOGGING = {
     'version': 1,
