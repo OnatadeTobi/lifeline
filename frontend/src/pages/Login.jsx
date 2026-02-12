@@ -21,12 +21,14 @@ function Login() {
                 password
             });
 
-            // Store tokens
-            localStorage.setItem('access_token', response.data.access);
-            localStorage.setItem('refresh_token', response.data.refresh);
+            // Store tokens and user role
+            localStorage.setItem('accessToken', response.data.access);
+            localStorage.setItem('refreshToken', response.data.refresh);
+            localStorage.setItem('userRole', response.data.role || '');
 
             // Redirect to dashboard
             navigate('/dashboard');
+
         } catch (err) {
             setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
         } finally {

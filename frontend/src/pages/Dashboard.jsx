@@ -1,47 +1,50 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Droplet, LogOut, Heart, User } from 'lucide-react';
-import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
+import { Droplet, LogOut, Heart, User, Plus, List, Activity } from 'lucide-react';
+import api from '../utils/api';
+import { getUserRole, parseJwt, getAccessToken, logout } from '../utils/auth';
 
 function Dashboard() {
-    const [user, setUser] = useState(null);
+    const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const userRole = getUserRole();
+    const isHospital = userRole === 'HOSPITAL';
 
     useEffect(() => {
-        const token = localStorage.getItem('access_token');
+        const token = getAccessToken();
 
         if (!token) {
             navigate('/login');
             return;
         }
 
-        // Set axios default header
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        // Get basic info from JWT token
+        const tokenData = parseJwt(token);
 
-        // Fetch user profile
-        fetchProfile();
+        // Fetch full profile from the appropriate endpoint
+        fetchProfile(tokenData);
     }, [navigate]);
 
-    const fetchProfile = async () => {
+    const fetchProfile = async (tokenData) => {
         try {
-            // This endpoint doesn't exist yet, but shows the pattern
-            const response = await axios.get('/api/v1/auth/me/');
-            setUser(response.data);
+            const endpoint = isHospital ? '/hospitals/profile/' : '/donors/profile/';
+            const response = await api.get(endpoint);
+            setProfile(response.data);
         } catch (err) {
-            if (err.response?.status === 401) {
-                handleLogout();
-            }
+            console.error('Failed to fetch profile:', err);
+            // Still show dashboard with basic info from token
+            setProfile({
+                email: tokenData?.email || 'User',
+                role: tokenData?.role || userRole,
+            });
         } finally {
             setLoading(false);
         }
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        delete axios.defaults.headers.common['Authorization'];
-        navigate('/login');
+        logout();
     };
 
     if (loading) {
@@ -65,13 +68,18 @@ function Dashboard() {
                             <Droplet className="w-8 h-8 text-lifeline-crimson" fill="currentColor" />
                             <h1 className="text-2xl font-bold text-lifeline-crimson">Lifeline</h1>
                         </div>
-                        <button
-                            onClick={handleLogout}
-                            className="flex items-center space-x-2 text-lifeline-gray hover:text-lifeline-crimson transition-colors"
-                        >
-                            <LogOut className="w-5 h-5" />
-                            <span>Logout</span>
-                        </button>
+                        <div className="flex items-center space-x-4">
+                            <Link to="/requests" className="text-lifeline-gray hover:text-lifeline-crimson transition-colors">
+                                Requests
+                            </Link>
+                            <button
+                                onClick={handleLogout}
+                                className="flex items-center space-x-2 text-lifeline-gray hover:text-lifeline-crimson transition-colors"
+                            >
+                                <LogOut className="w-5 h-5" />
+                                <span>Logout</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -80,23 +88,29 @@ function Dashboard() {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="mb-8">
                     <h2 className="text-3xl font-bold text-lifeline-dark mb-2">
-                        Welcome back! 👋
+                        Welcome back{profile?.first_name ? `, ${profile.first_name}` : profile?.name ? `, ${profile.name}` : ''}! 👋
                     </h2>
                     <p className="text-lifeline-gray">
-                        Ready to save lives today?
+                        {isHospital
+                            ? 'Manage your blood requests and find donors'
+                            : 'Ready to save lives today?'}
                     </p>
                 </div>
 
+                {/* Quick Stats */}
                 <div className="grid md:grid-cols-3 gap-6 mb-8">
-                    {/* Quick Stats */}
                     <div className="card">
                         <div className="flex items-center space-x-4">
                             <div className="bg-blood-50 p-3 rounded-full">
                                 <Heart className="w-6 h-6 text-lifeline-crimson" fill="currentColor" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-lifeline-dark">12</p>
-                                <p className="text-sm text-lifeline-gray">Total Donations</p>
+                                <p className="text-2xl font-bold text-lifeline-dark">
+                                    {isHospital ? (profile?.total_requests || 0) : (profile?.total_donations || 0)}
+                                </p>
+                                <p className="text-sm text-lifeline-gray">
+                                    {isHospital ? 'Total Requests' : 'Total Donations'}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -107,8 +121,12 @@ function Dashboard() {
                                 <Droplet className="w-6 h-6 text-medical-600" fill="currentColor" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-lifeline-dark">O+</p>
-                                <p className="text-sm text-lifeline-gray">Blood Type</p>
+                                <p className="text-2xl font-bold text-lifeline-dark">
+                                    {isHospital ? (profile?.primary_location_name || 'N/A') : (profile?.blood_type || 'N/A')}
+                                </p>
+                                <p className="text-sm text-lifeline-gray">
+                                    {isHospital ? 'Primary Location' : 'Blood Type'}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -119,58 +137,85 @@ function Dashboard() {
                                 <User className="w-6 h-6 text-lifeline-crimson" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-lifeline-dark">Active</p>
-                                <p className="text-sm text-lifeline-gray">Status</p>
+                                <p className="text-2xl font-bold text-lifeline-dark">
+                                    {isHospital ? 'Hospital' : (profile?.is_available ? 'Available' : 'Unavailable')}
+                                </p>
+                                <p className="text-sm text-lifeline-gray">
+                                    {isHospital ? 'Account Type' : 'Status'}
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Recent Requests */}
-                <div className="card">
-                    <h3 className="text-xl font-bold text-lifeline-dark mb-4">Recent Blood Requests</h3>
-                    <div className="space-y-4">
-                        <div className="p-4 bg-lifeline-cream rounded-lg border border-gray-100">
-                            <div className="flex justify-between items-start mb-2">
-                                <div>
-                                    <p className="font-semibold text-lifeline-dark">Lagos University Teaching Hospital</p>
-                                    <p className="text-sm text-lifeline-gray">Needs: O+ Blood</p>
+                {/* Quick Actions */}
+                <div className="grid md:grid-cols-2 gap-6 mb-8">
+                    {isHospital ? (
+                        <>
+                            <Link to="/create-request" className="card hover:shadow-lg transition-shadow group">
+                                <div className="flex items-center space-x-4">
+                                    <div className="bg-lifeline-crimson p-3 rounded-full group-hover:scale-110 transition-transform">
+                                        <Plus className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-lifeline-dark">Create Blood Request</h3>
+                                        <p className="text-sm text-lifeline-gray">Post a new request and find compatible donors</p>
+                                    </div>
                                 </div>
-                                <span className="px-3 py-1 bg-blood-100 text-lifeline-crimson text-sm font-semibold rounded-full">
-                                    Urgent
-                                </span>
-                            </div>
-                            <p className="text-sm text-lifeline-gray mb-3">
-                                Emergency surgery patient requires O+ blood immediately.
-                            </p>
-                            <button className="btn-primary w-full sm:w-auto">
-                                Respond to Request
-                            </button>
-                        </div>
-
-                        <div className="p-4 bg-lifeline-cream rounded-lg border border-gray-100">
-                            <div className="flex justify-between items-start mb-2">
-                                <div>
-                                    <p className="font-semibold text-lifeline-dark">General Hospital Ikeja</p>
-                                    <p className="text-sm text-lifeline-gray">Needs: A+ Blood</p>
+                            </Link>
+                            <Link to="/requests" className="card hover:shadow-lg transition-shadow group">
+                                <div className="flex items-center space-x-4">
+                                    <div className="bg-medical-600 p-3 rounded-full group-hover:scale-110 transition-transform">
+                                        <List className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-lifeline-dark">My Requests</h3>
+                                        <p className="text-sm text-lifeline-gray">View and manage your blood requests</p>
+                                    </div>
                                 </div>
-                                <span className="px-3 py-1 bg-medical-100 text-medical-600 text-sm font-semibold rounded-full">
-                                    Open
-                                </span>
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <Link to="/requests" className="card hover:shadow-lg transition-shadow group">
+                                <div className="flex items-center space-x-4">
+                                    <div className="bg-lifeline-crimson p-3 rounded-full group-hover:scale-110 transition-transform">
+                                        <Activity className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-lifeline-dark">Browse Requests</h3>
+                                        <p className="text-sm text-lifeline-gray">Find blood requests in your area</p>
+                                    </div>
+                                </div>
+                            </Link>
+                            <div className="card">
+                                <div className="flex items-center space-x-4">
+                                    <div className="bg-medical-600 p-3 rounded-full">
+                                        <Heart className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-lifeline-dark">
+                                            {profile?.is_available ? 'You are Available' : 'You are Unavailable'}
+                                        </h3>
+                                        <p className="text-sm text-lifeline-gray">
+                                            {profile?.is_available
+                                                ? 'Hospitals can find you for donations'
+                                                : 'Toggle availability to receive requests'}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
-                            <p className="text-sm text-lifeline-gray mb-3">
-                                Multiple patients in need of A+ blood type for scheduled procedures.
-                            </p>
-                            <button className="btn-secondary w-full sm:w-auto">
-                                View Details
-                            </button>
-                        </div>
-                    </div>
+                        </>
+                    )}
+                </div>
 
-                    <div className="mt-6 text-center">
-                        <button className="text-lifeline-crimson hover:underline font-semibold">
-                            View All Requests →
-                        </button>
+                {/* Role Badge */}
+                <div className="card text-center">
+                    <div className="inline-flex items-center px-4 py-2 bg-blood-50 rounded-full">
+                        <Droplet className="w-4 h-4 text-lifeline-crimson mr-2" fill="currentColor" />
+                        <span className="text-sm font-semibold text-lifeline-crimson">
+                            {isHospital ? 'Hospital Account' : 'Donor Account'} • {profile?.email || 'User'}
+                        </span>
                     </div>
                 </div>
             </main>
