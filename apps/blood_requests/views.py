@@ -144,8 +144,9 @@ class BloodRequestListView(generics.ListAPIView):
         user = self.request.user
         masked_user = mask_email(user.email)
         user_role = getattr(user, 'role', 'unknown')
+        status_filter = self.request.query_params.get('status', None)
 
-        logger.info(f"BloodRequestListView accessed - User: {masked_user}, Role: {user_role}")
+        logger.info(f"BloodRequestListView accessed - User: {masked_user}, Role: {user_role}, Status filter: {status_filter}")
 
 
         try:
@@ -160,6 +161,11 @@ class BloodRequestListView(generics.ListAPIView):
                 
                 # Hospitals see their own requests
                 queryset = BloodRequest.objects.filter(hospital=hospital)
+
+                # Apply status filter if provided
+                if status_filter:
+                    queryset = queryset.filter(status=status_filter)
+
                 logger.info(
                     f"Hospital query completed - User: {masked_user}, "
                     f"Hospital ID: {hospital.id}, Count: {queryset.count()}"
@@ -175,7 +181,7 @@ class BloodRequestListView(generics.ListAPIView):
                     logger.error(f"Donor profile not found - User: {masked_user}")
                     return BloodRequest.objects.none()
                 
-                # Donors see open requests in their service areas
+                # Donors see requests in their service areas
                 donor_service_areas = donor.service_locations.all()
                 area_count = donor_service_areas.count()
                 logger.debug(
@@ -191,10 +197,18 @@ class BloodRequestListView(generics.ListAPIView):
                     f"Blood Type: {donor.blood_type}, Compatible: {compatible_types}"
                 )
                 
+                # Default to OPEN if no status filter specified
+                base_filters = {
+                    'hospital__service_locations__in': donor_service_areas,
+                    'blood_type__in': compatible_types,
+                }
+                if status_filter:
+                    base_filters['status'] = status_filter
+                else:
+                    base_filters['status__in'] = ['OPEN', 'MATCHED', 'FULFILLED']
+
                 queryset = BloodRequest.objects.filter(
-                    status='OPEN',
-                    hospital__service_locations__in=donor_service_areas,
-                    blood_type__in=compatible_types
+                    **base_filters
                 ).distinct()
 
                 logger.info(

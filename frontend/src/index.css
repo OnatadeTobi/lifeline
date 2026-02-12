@@ -13,21 +13,174 @@ body {
   min-height: 100vh;
 }
 
-/* Custom utility classes */
+/* ======================== */
+/* Animations               */
+/* ======================== */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes heartbeat {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  14% {
+    transform: scale(1.15);
+  }
+
+  28% {
+    transform: scale(1);
+  }
+
+  42% {
+    transform: scale(1.10);
+  }
+
+  56% {
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes count-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out both;
+}
+
+.animate-heartbeat {
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-count-up {
+  animation: count-up 0.6s ease-out both;
+}
+
+/* ======================== */
+/* Component Styles         */
+/* ======================== */
+
 @layer components {
   .btn-primary {
-    @apply bg-lifeline-crimson hover:bg-blood-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200;
+    @apply bg-lifeline-crimson hover:bg-blood-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-200;
+    @apply hover:shadow-lg hover:shadow-blood-200 active:scale-[0.98];
   }
-  
+
   .btn-secondary {
-    @apply bg-medical-600 hover:bg-medical-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200;
+    @apply bg-medical-600 hover:bg-medical-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-200;
+    @apply hover:shadow-lg hover:shadow-medical-200 active:scale-[0.98];
   }
-  
+
   .card {
     @apply bg-white rounded-xl shadow-md p-6 border border-gray-100;
+    @apply transition-all duration-200;
   }
-  
+
+  .card-hover {
+    @apply card hover:shadow-xl hover:-translate-y-0.5;
+  }
+
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lifeline-crimson focus:border-transparent;
+    @apply w-full px-4 py-2.5 border border-gray-300 rounded-lg transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-lifeline-crimson focus:border-transparent focus:shadow-md;
+    @apply placeholder:text-gray-400;
   }
+
+  .link-primary {
+    @apply text-lifeline-crimson hover:text-blood-700 transition-colors font-medium;
+  }
+}
+
+/* ======================== */
+/* Accessibility            */
+/* ======================== */
+
+/* Better focus indicators */
+*:focus-visible {
+  @apply outline-none ring-2 ring-lifeline-crimson ring-offset-2;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ======================== */
+/* Scrollbar styling        */
+/* ======================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
 }

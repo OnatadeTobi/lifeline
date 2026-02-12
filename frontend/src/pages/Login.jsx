@@ -40,7 +40,7 @@ function Login() {
         <div className="min-h-screen bg-gradient-to-br from-lifeline-cream via-white to-blood-50 flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Logo Header */}
-                <div className="text-center mb-8">
+                <div className="text-center mb-8 animate-fade-in">
                     <Link to="/" className="inline-flex items-center space-x-2">
                         <Droplet className="w-10 h-10 text-lifeline-crimson" fill="currentColor" />
                         <h1 className="text-3xl font-bold text-lifeline-crimson">Lifeline</h1>
@@ -49,7 +49,7 @@ function Login() {
                 </div>
 
                 {/* Login Card */}
-                <div className="card">
+                <div className="card animate-fade-in" style={{ animationDelay: '0.1s' }}>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {error && (
                             <div className="bg-blood-50 border border-lifeline-crimson text-lifeline-crimson px-4 py-3 rounded-lg">

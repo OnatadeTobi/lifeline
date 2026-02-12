@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Droplet, Phone, FileText, AlertCircle } from 'lucide-react';
 import api from '../utils/api';
+import { useNotification } from '../components/NotificationContext';
+import Navbar from '../components/Navbar';
 
 function CreateRequest() {
     const [formData, setFormData] = useState({
@@ -12,6 +14,7 @@ function CreateRequest() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const { success, error: notifyError } = useNotification();
 
     const bloodTypes = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 
@@ -26,7 +29,7 @@ function CreateRequest() {
 
         try {
             const response = await api.post('/requests/create/', formData);
-
+            success('Blood request created successfully!');
             navigate(`/requests/${response.data.id}`, {
                 state: { message: 'Request created successfully!' }
             });
@@ -38,9 +41,12 @@ function CreateRequest() {
                     const msg = Array.isArray(value) ? value[0] : value;
                     messages.push(msg);
                 }
-                setError(messages.join(' '));
+                const combined = messages.join(' ');
+                setError(combined);
+                notifyError(combined);
             } else {
                 setError('Failed to create request. Please try again.');
+                notifyError('Failed to create request.');
             }
         } finally {
             setLoading(false);
@@ -48,17 +54,11 @@ function CreateRequest() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-lifeline-cream via-white to-blood-50 py-12 px-4">
-            <div className="w-full max-w-2xl mx-auto">
-                <div className="text-center mb-8">
-                    <Link to="/dashboard" className="inline-flex items-center space-x-2">
-                        <Droplet className="w-10 h-10 text-lifeline-crimson" fill="currentColor" />
-                        <h1 className="text-3xl font-bold text-lifeline-crimson">Lifeline</h1>
-                    </Link>
-                    <p className="mt-2 text-lifeline-gray">Create a blood request</p>
-                </div>
+        <div className="min-h-screen bg-gradient-to-br from-lifeline-cream via-white to-blood-50">
+            <Navbar />
 
-                <div className="card">
+            <main className="max-w-2xl mx-auto px-4 py-8">
+                <div className="card animate-fade-in">
                     <div className="mb-6">
                         <h2 className="text-2xl font-bold text-lifeline-dark">New Blood Request</h2>
                         <p className="text-lifeline-gray mt-1">Fill in the details below to find compatible donors</p>
@@ -66,7 +66,7 @@ function CreateRequest() {
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {error && (
-                            <div className="bg-blood-50 border border-lifeline-crimson text-lifeline-crimson px-4 py-3 rounded-lg flex items-start">
+                            <div className="bg-blood-50 border border-lifeline-crimson text-lifeline-crimson px-4 py-3 rounded-lg flex items-start animate-fade-in">
                                 <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
                                 <span>{error}</span>
                             </div>
@@ -136,10 +136,7 @@ function CreateRequest() {
                             >
                                 {loading ? 'Creating Request...' : 'Create Request & Find Donors'}
                             </button>
-                            <Link
-                                to="/dashboard"
-                                className="btn-secondary px-6"
-                            >
+                            <Link to="/dashboard" className="btn-secondary px-6">
                                 Cancel
                             </Link>
                         </div>
@@ -161,7 +158,7 @@ function CreateRequest() {
                         ← Back to Dashboard
                     </Link>
                 </div>
-            </div>
+            </main>
         </div>
     );
 }
